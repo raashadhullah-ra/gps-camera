@@ -1,0 +1,151 @@
+// ======================================================
+// SHARED TABLES - Responsive Data Table Layouts
+// ======================================================
+
+// ======================================================
+// SHARED TABLES - Responsive Data Table Layouts
+// ======================================================
+
+.table-card-wrapper,
+.devices-table-card {
+  background: $white;
+  border: 1px solid $border;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+  overflow: hidden;
+  margin-bottom: $sp-md;
+
+  .table-card-top-bar,
+  .table-card-header {
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid $border-light;
+
+    .table-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: $text-dark;
+      white-space: nowrap;
+      margin-bottom: 0;
+    }
+
+    .table-header-tools {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+
+      .btn-tool {
+        background: transparent;
+        border: 1px solid $border;
+        border-radius: $radius-md;
+        padding: 5px 12px;
+        font-size: 12px;
+        font-weight: 500;
+        color: $text-secondary;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        transition: all $transition-fast;
+
+        &:hover {
+          background-color: $bg-panel;
+          color: $text-dark;
+          border-color: $border;
+        }
+
+        i {
+          font-size: 11px;
+        }
+      }
+    }
+  }
+
+  .table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    min-height: 120px;
+  }
+
+  .devices-data-table,
+  .admin-data-table,
+  .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 0;
+
+    thead th {
+      background: #fafbfc;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: $text-secondary;
+      text-transform: capitalize;
+      padding: 10px 16px;
+      border-bottom: 1px solid $border;
+      white-space: nowrap;
+      vertical-align: middle;
+
+      &.th-checkbox {
+        width: 36px;
+        padding-right: 4px;
+      }
+
+      &.th-action {
+        text-align: right;
+        width: 90px;
+      }
+    }
+
+    tbody td {
+      font-size: 12.5px;
+      color: $text-body;
+      padding: 12px 16px;
+      border-bottom: 1px solid $border-light;
+      vertical-align: middle;
+      white-space: nowrap;
+
+      &.td-checkbox {
+        width: 36px;
+        padding-right: 4px;
+      }
+
+      &.td-action {
+        text-align: right;
+      }
+    }
+
+    tbody tr {
+      transition: background-color $transition-fast;
+
+      &:hover {
+        background-color: #f8fafc;
+      }
+
+      &:last-child td {
+        border-bottom: none;
+      }
+    }
+  }
+}
+
+// Monospace Installation ID & Links
+.installation-id-link {
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $primary;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.date-text,
+.last-active-text {
+  font-size: 12px;
+  color: $text-secondary;
+}
+

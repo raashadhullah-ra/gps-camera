@@ -1,0 +1,212 @@
+// ======================================================
+// SHARED COMPONENTS - Reusable UI Elements & Badges
+// ======================================================
+
+.btn {
+  font-family: $font-family-base;
+  font-size: $tx-sm2;
+  font-weight: 500;
+  border-radius: $radius-md;
+  padding: 8px 16px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $sp-xs;
+  white-space: nowrap;
+  transition: all $transition-fast;
+  line-height: 1.2;
+}
+
+.btn-primary {
+  background: $primary;
+  border-color: $primary;
+  color: $white;
+
+  &:hover, &:focus, &:active {
+    background: $primary-hover;
+    border-color: $primary-hover;
+    color: $white;
+    box-shadow: $shadow-sm;
+  }
+}
+
+.btn-outline-primary {
+  background: transparent;
+  border: 1px solid $primary;
+  color: $primary;
+
+  &:hover, &:focus, &:active {
+    background: $primary;
+    border-color: $primary;
+    color: $white;
+  }
+}
+
+.btn-outline-secondary {
+  background: $white;
+  border: 1px solid $border;
+  color: $text-secondary;
+
+  &:hover, &:focus, &:active {
+    background: $bg-panel;
+    border-color: #cbd5e1;
+    color: $text-dark;
+  }
+}
+
+.btn-danger {
+  background: $danger;
+  border-color: $danger;
+  color: $white;
+
+  &:hover, &:focus, &:active {
+    background: $danger-text;
+    border-color: $danger-text;
+    color: $white;
+  }
+}
+
+.badge-status,
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+
+  &.active,
+  &.badge-success {
+    background-color: #e8f5e9;
+    color: #15803d;
+
+    .status-dot {
+      background-color: #15803d;
+    }
+  }
+
+  &.inactive,
+  &.badge-secondary {
+    background-color: #f1f5f9;
+    color: #64748b;
+
+    .status-dot {
+      background-color: #94a3b8;
+    }
+  }
+
+  &.badge-warning {
+    background-color: #fef3c7;
+    color: #b45309;
+
+    .status-dot {
+      background-color: #b45309;
+    }
+  }
+
+  &.badge-danger {
+    background-color: #fee2e2;
+    color: #dc2626;
+
+    .status-dot {
+      background-color: #dc2626;
+    }
+  }
+
+  &.badge-info {
+    background-color: rgba(13, 148, 136, 0.1);
+    color: $info;
+
+    .status-dot {
+      background-color: $info;
+    }
+  }
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  @include flex-center;
+  font-weight: 700;
+  font-size: $tx-sm2;
+
+  &.avatar-teal {
+    background: $info;
+    color: $white;
+  }
+
+  &.avatar-primary {
+    background: $primary;
+    color: $white;
+  }
+}
+
+.alert-warning-banner {
+  background: $warning-light;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: $radius-md;
+  padding: $sp-md $sp-lg;
+  color: $warning-text;
+  font-size: $tx-sm2;
+  display: flex;
+  align-items: center;
+  gap: $sp-sm;
+
+  i {
+    font-size: 18px;
+    color: $warning;
+  }
+}
+
+// ------------------------------------------------------
+// Shared Table Action Icons (Eye & 3-Dots Action Triggers)
+// ------------------------------------------------------
+.btn-action-icon,
+.btn-action-dots {
+  width: 30px;
+  height: 30px;
+  border-radius: $radius-md;
+  border: 1px solid transparent;
+  background: transparent;
+  color: $text-secondary;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13.5px;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  text-decoration: none !important;
+  outline: none;
+  box-shadow: none;
+  transition: all $transition-fast;
+  vertical-align: middle;
+
+  &:hover, &:focus, &:active {
+    background-color: $bg-panel;
+    color: $primary;
+    border-color: $border;
+    text-decoration: none !important;
+    outline: none;
+    box-shadow: none;
+  }
+}
+
+.btn-action-dots {
+  &:hover, &:focus, &:active {
+    color: $text-dark;
+  }
+}
+

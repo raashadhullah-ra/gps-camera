@@ -1,0 +1,147 @@
+// ======================================================
+// ADMIN SIDEBAR - Left Navigation Sidebar Panel
+// ======================================================
+
+.sidebar-panel {
+  width: $sidebar-width;
+  background-color: $sidebar-bg;
+  color: $white;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1000;
+  overflow-y: auto;
+  transition: width $transition-base, transform $transition-base;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: $radius-sm;
+  }
+
+  .sidebar-header {
+    height: 75px;
+    display: flex;
+    align-items: center;
+    padding: 0 18px;
+    border-bottom: none !important; // Removed border bottom line as requested
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .logo-img {
+        width: 42px !important;
+        height: 42px !important;
+        max-width: 42px !important;
+        max-height: 42px !important;
+        object-fit: contain;
+        filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.25));
+      }
+
+      .logo-text {
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        color: $white;
+        white-space: nowrap;
+      }
+    }
+  }
+
+  .sidebar-menu {
+    padding: 10px 10px;
+    flex: 1;
+
+    .menu-header {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #64748b;
+      padding: 12px 12px 4px 12px;
+      white-space: nowrap;
+    }
+
+    .nav-item {
+      margin-bottom: 3px;
+
+      .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 7px 12px;
+        border-radius: 8px;
+        color: #94a3b8;
+        font-size: 13.5px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all $transition-fast;
+        white-space: nowrap;
+
+        i, svg {
+          font-size: 16px;
+          width: 20px;
+          text-align: center;
+          opacity: 0.85;
+          flex-shrink: 0;
+        }
+
+        &:hover {
+          color: $white;
+          background: rgba(255, 255, 255, 0.07);
+        }
+      }
+
+      &.active .nav-link {
+        background: $primary;
+        color: $white;
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(13, 110, 253, 0.35);
+
+        i, svg {
+          opacity: 1;
+        }
+      }
+    }
+  }
+}
+
+// Collapsed Sidebar State
+.admin-wrapper.sidebar-collapsed {
+  .sidebar-panel {
+    width: 70px;
+
+    .sidebar-logo .logo-text,
+    .menu-header,
+    .nav-link span {
+      display: none;
+    }
+
+    .sidebar-header {
+      justify-content: center;
+      padding: 0;
+    }
+
+    .sidebar-menu .nav-item .nav-link {
+      justify-content: center;
+      padding: 10px 0;
+
+      i, svg {
+        margin: 0;
+        font-size: 18px;
+      }
+    }
+  }
+
+  .admin-main {
+    margin-left: 70px;
+  }
+}

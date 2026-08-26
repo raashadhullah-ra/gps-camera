@@ -1,0 +1,759 @@
+// ======================================================
+// ADMIN PROFILE & CHANGE PASSWORD - Style Partial
+// ======================================================
+
+.profile-page,
+.change-password-page {
+  padding: $sp-lg;
+  padding-bottom: $sp-xl;
+
+  // Page Header
+  .page-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: $sp-lg;
+    gap: $sp-md;
+
+    .header-title-group {
+      .page-main-title {
+        font-size: $tx-2xl;
+        font-weight: 700;
+        color: $text-dark;
+        letter-spacing: -0.02em;
+        margin-bottom: $sp-xs;
+      }
+
+      .page-main-subtitle {
+        font-size: $tx-sm;
+        color: $text-secondary;
+        margin-bottom: 0;
+      }
+    }
+
+    .header-actions-group {
+      display: flex;
+      align-items: center;
+      gap: $sp-sm;
+    }
+  }
+
+  // Top User Banner Card
+  .profile-banner-card {
+    background: $white;
+    border: 1px solid $border;
+    border-radius: $radius-lg;
+    padding: 20px $sp-lg;
+    box-shadow: $shadow-sm;
+    margin-bottom: $sp-lg;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $sp-lg;
+    flex-wrap: wrap;
+
+    .banner-user-left {
+      display: flex;
+      align-items: center;
+      gap: $sp-md;
+
+      .profile-avatar-lg {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background-color: $info;
+        color: $white;
+        font-size: 22px;
+        font-weight: 700;
+        @include flex-center;
+        flex-shrink: 0;
+      }
+
+      .user-info-text {
+        .user-full-name {
+          font-size: 19px;
+          font-weight: 700;
+          color: $text-dark;
+          margin-bottom: 6px;
+        }
+
+        .badges-row {
+          display: flex;
+          align-items: center;
+          gap: $sp-sm;
+
+          .badge-role-pill {
+            background-color: $primary-light-bg;
+            color: $primary;
+            border: 1px solid $border;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 10px;
+            border-radius: 9999px;
+          }
+
+          .badge-active-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: $success-text;
+            font-size: $tx-xs;
+            font-weight: 500;
+
+            .status-dot {
+              width: 7px;
+              height: 7px;
+              border-radius: 50%;
+              background-color: $success;
+            }
+          }
+        }
+      }
+    }
+
+    .banner-meta-items {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      flex-wrap: wrap;
+
+      .meta-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+
+        .meta-icon {
+          font-size: 16px;
+          color: $text-muted;
+          margin-top: 2px;
+        }
+
+        .meta-content {
+          .meta-label {
+            font-size: 11.5px;
+            color: $text-muted;
+            font-weight: 500;
+            margin-bottom: 2px;
+          }
+
+          .meta-value {
+            font-size: $tx-sm;
+            font-weight: 400;
+            color: $text-dark;
+          }
+        }
+      }
+    }
+  }
+
+  // 2x2 Grid for Profile Cards
+  .profile-grid-2x2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: $sp-lg;
+    margin-bottom: $sp-lg;
+
+    @media (max-width: 992px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  // Profile Card Component
+  .profile-card {
+    background: $white;
+    border: 1px solid $border;
+    border-radius: $radius-lg;
+    padding: 22px $sp-lg;
+    box-shadow: $shadow-sm;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    .card-head-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid $border-light;
+
+      .head-title-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        i {
+          font-size: 16px;
+          color: $text-secondary;
+        }
+
+        .head-title {
+          font-size: $tx-md;
+          font-weight: 700;
+          color: $text-dark;
+          margin-bottom: 0;
+        }
+      }
+
+      .badge-account-protected {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background-color: $success-light;
+        color: $success-text;
+        border: 1px solid rgba($success, 0.2);
+        font-size: 11.5px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 9999px;
+      }
+    }
+
+    // Detail Items in 2 Columns
+    .details-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px 20px;
+      margin-bottom: 18px;
+
+      @media (max-width: 576px) {
+        grid-template-columns: 1fr;
+      }
+
+      .detail-entry {
+        .detail-label {
+          font-size: 12.5px;
+          color: $text-secondary;
+          margin-bottom: 3px;
+        }
+
+        .detail-value {
+          font-size: $tx-sm2;
+          font-weight: 500;
+          color: $text-dark;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+
+          .badge-verified {
+            font-size: 10.5px;
+            font-weight: 600;
+            background-color: $success-light;
+            color: $success-text;
+            border: 1px solid rgba($success, 0.2);
+            padding: 1px 6px;
+            border-radius: $radius-sm;
+          }
+        }
+      }
+    }
+
+    // Security List Items
+    .security-status-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 18px;
+
+      .sec-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: $tx-sm2;
+
+        .sec-label {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          color: $text-body;
+
+          i {
+            color: $text-secondary;
+            font-size: 14px;
+            width: 16px;
+            text-align: center;
+          }
+        }
+
+        .sec-value {
+          font-weight: 600;
+
+          &.status-positive {
+            color: $success-text;
+          }
+        }
+      }
+    }
+
+    // Preferences List Items
+    .pref-setting-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 18px;
+
+      .pref-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        .pref-title {
+          font-size: $tx-sm2;
+          font-weight: 500;
+          color: $text-dark;
+        }
+
+        .form-check-input {
+          width: 36px;
+          height: 20px;
+          cursor: pointer;
+        }
+
+        .form-select-sm {
+          width: 170px;
+          font-size: 12.5px;
+          padding: 5px 10px;
+          border-radius: $radius-sm;
+        }
+      }
+    }
+
+    .card-action-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: auto;
+      padding-top: 14px;
+      border-top: 1px solid $border-light;
+
+      .btn {
+        font-size: $tx-sm;
+        font-weight: 500;
+        padding: 7px $sp-md;
+        border-radius: $radius-md;
+      }
+    }
+  }
+
+  // Audit Banner
+  .alert-audit-note {
+    background-color: $primary-light-bg;
+    border: 1px solid rgba($primary, 0.25);
+    border-radius: $radius-md;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: $primary-dark;
+    font-size: $tx-sm;
+    font-weight: 500;
+
+    i {
+      font-size: 16px;
+      color: $primary;
+      flex-shrink: 0;
+    }
+  }
+}
+
+// ------------------------------------------------------
+// Change Password Specific Styles
+// ------------------------------------------------------
+.change-password-page {
+  .password-split-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: $sp-lg;
+    margin-bottom: $sp-lg;
+
+    @media (max-width: 992px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .password-form-card {
+    background: $white;
+    border: 1px solid $border;
+    border-radius: $radius-lg;
+    padding: $sp-lg;
+    box-shadow: $shadow-sm;
+
+    .form-card-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: $text-dark;
+      margin-bottom: $sp-md;
+    }
+
+    .user-pill-strip {
+      background-color: $bg-panel;
+      border: 1px solid $border;
+      border-radius: 10px;
+      padding: 12px $sp-md;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+
+      .user-avatar-sm {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: $info;
+        color: $white;
+        font-size: 15px;
+        font-weight: 700;
+        @include flex-center;
+      }
+
+      .user-name-text {
+        font-size: $tx-sm2;
+        font-weight: 700;
+        color: $text-dark;
+      }
+
+      .user-email-text {
+        font-size: 12.5px;
+        color: $text-secondary;
+      }
+    }
+
+    .form-field-item {
+      margin-bottom: 18px;
+
+      .field-label-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+
+        .field-label {
+          font-size: 13.5px;
+          font-weight: 500;
+          color: $text-dark;
+          margin-bottom: 0;
+
+          .req-star {
+            color: $danger;
+          }
+        }
+
+        .forgot-pass-link {
+          font-size: 12.5px;
+          color: $primary;
+          text-decoration: none;
+
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+      }
+
+      .input-wrapper {
+        position: relative;
+
+        .input-icon-left {
+          position: absolute;
+          left: 14px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: $text-muted;
+          font-size: 14px;
+          pointer-events: none;
+        }
+
+        .form-control {
+          padding-left: 38px;
+          padding-right: 40px;
+          height: 42px;
+          font-size: 14px;
+          border-radius: $radius-md;
+          border: 1px solid $border;
+          color: $text-dark;
+
+          &:focus {
+            border-color: $primary;
+            box-shadow: 0 0 0 3px rgba($primary, 0.15);
+          }
+        }
+
+        .password-toggle-btn {
+          position: absolute;
+          right: 14px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: $text-muted;
+          cursor: pointer;
+          font-size: 14px;
+
+          &:hover {
+            color: $primary;
+          }
+        }
+
+        .valid-check-icon {
+          position: absolute;
+          right: 40px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: $success-text;
+          font-size: 15px;
+          display: none;
+
+          &.show {
+            display: block;
+          }
+        }
+      }
+
+      .strength-indicator-box {
+        margin-top: $sp-sm;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+
+        .strength-bars-track {
+          display: flex;
+          gap: 6px;
+          flex: 1;
+
+          .bar-segment {
+            height: 4px;
+            flex: 1;
+            background-color: $border;
+            border-radius: 2px;
+            transition: background-color 0.2s ease;
+
+            &.active-weak { background-color: $danger; }
+            &.active-fair { background-color: $warning; }
+            &.active-good { background-color: $info; }
+            &.active-strong { background-color: $success; }
+          }
+        }
+
+        .strength-text {
+          font-size: $tx-xs;
+          font-weight: 600;
+          color: $text-secondary;
+          white-space: nowrap;
+
+          &.text-weak { color: $danger; }
+          &.text-fair { color: $warning; }
+          &.text-good { color: $info; }
+          &.text-strong { color: $success-text; }
+        }
+      }
+    }
+
+    // Password Requirements Grid
+    .password-reqs-section {
+      margin-bottom: 20px;
+
+      .reqs-title {
+        font-size: $tx-sm;
+        font-weight: 600;
+        color: $text-body;
+        margin-bottom: 10px;
+      }
+
+      .reqs-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: $sp-sm $sp-md;
+
+        @media (max-width: 576px) {
+          grid-template-columns: 1fr;
+        }
+
+        .req-item {
+          display: flex;
+          align-items: center;
+          gap: $sp-sm;
+          font-size: 12.5px;
+          color: $text-secondary;
+          transition: color $transition-fast;
+
+          i {
+            font-size: 14px;
+            color: $border;
+            transition: color $transition-fast;
+          }
+
+          &.met {
+            color: $success-text;
+            font-weight: 500;
+
+            i {
+              color: $success-text;
+            }
+          }
+        }
+      }
+    }
+
+    .signout-sessions-row {
+      margin-bottom: $sp-lg;
+
+      .form-check-label {
+        font-size: 13.5px;
+        font-weight: 600;
+        color: $text-dark;
+        cursor: pointer;
+
+        .subtext {
+          display: block;
+          font-size: $tx-xs;
+          font-weight: 400;
+          color: $text-secondary;
+          margin-top: 2px;
+        }
+      }
+    }
+
+    .form-btn-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+  }
+
+  // Right Side Cards
+  .password-sidebar-cards {
+    display: flex;
+    flex-direction: column;
+    gap: $sp-lg;
+
+    .sidebar-info-card {
+      background: $white;
+      border: 1px solid $border;
+      border-radius: $radius-lg;
+      padding: 22px $sp-lg;
+      box-shadow: $shadow-sm;
+
+      .card-header-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: $sp-md;
+        padding-bottom: 10px;
+        border-bottom: 1px solid $border-light;
+
+        .header-text {
+          font-size: $tx-md;
+          font-weight: 700;
+          color: $text-dark;
+        }
+
+        .badge-protected {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          background-color: $success-light;
+          color: $success-text;
+          border: 1px solid rgba($success, 0.2);
+          font-size: 11px;
+          font-weight: 600;
+          padding: 2px 8px;
+          border-radius: 9999px;
+        }
+      }
+
+      .summary-meta-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: $sp-md;
+
+        .summary-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          font-size: $tx-sm;
+
+          .label-group {
+            display: flex;
+            align-items: center;
+            gap: $sp-sm;
+            color: $text-body;
+
+            i {
+              color: $text-muted;
+              font-size: 13px;
+              width: 16px;
+              text-align: center;
+            }
+          }
+
+          .val-text {
+            font-weight: 500;
+            color: $text-dark;
+
+            &.positive {
+              color: $success-text;
+            }
+          }
+        }
+      }
+
+      .best-practices-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        margin-bottom: $sp-md;
+
+        .practice-item {
+          display: flex;
+          gap: 12px;
+
+          .step-num {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background-color: $primary;
+            color: $white;
+            font-size: 11px;
+            font-weight: 700;
+            @include flex-center;
+            flex-shrink: 0;
+          }
+
+          .step-info {
+            .step-title {
+              font-size: 13.5px;
+              font-weight: 600;
+              color: $text-dark;
+              margin-bottom: 2px;
+            }
+
+            .step-desc {
+              font-size: $tx-xs;
+              color: $text-secondary;
+              line-height: 1.4;
+            }
+          }
+        }
+      }
+
+      .warning-box-amber {
+        background-color: $warning-light;
+        border: 1px solid rgba($warning, 0.3);
+        border-radius: $radius-md;
+        padding: 12px 14px;
+        display: flex;
+        gap: 10px;
+        color: $warning-text;
+        font-size: 12.5px;
+        line-height: 1.45;
+
+        i {
+          color: $warning;
+          font-size: 15px;
+          margin-top: 1px;
+          flex-shrink: 0;
+        }
+      }
+    }
+  }
+}

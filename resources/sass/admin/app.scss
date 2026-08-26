@@ -1,0 +1,33 @@
+// ======================================================
+// ADMIN APPLICATION STYLESHEET (Entry Point)
+// ======================================================
+
+// 1. Shared Global Tokens & Mixins
+@import '../shared/variables';
+@import '../shared/mixins';
+
+// 2. Vendor Framework Integration (Bootstrap 5)
+@import 'bootstrap/scss/bootstrap';
+
+// 3. Shared Base, Components, Forms & Tables
+@import '../shared/base';
+@import '../shared/components';
+@import '../shared/forms';
+@import '../shared/tables';
+@import '../shared/vendor';
+@import '../shared/toasts';
+
+// 4. Admin Layout Partials
+@import 'sidebar';
+@import 'navbar';
+
+// 5. Admin Feature Partials
+@import 'auth';
+@import 'dashboard';
+@import 'profile';
+@import 'users';
+@import 'devices';
+@import 'locations';
+@import 'segments';
+@import 'notifications';
+

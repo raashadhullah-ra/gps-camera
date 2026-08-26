@@ -1,0 +1,38 @@
+first rule:
+
+Project Styling Rules — SCSS + Bootstrap
+
+Use Bootstrap classes as the default. Use custom SCSS only when Bootstrap can't do it.
+
+Single source of truth via SCSS variables
+All colors, spacing, border-radius, font-sizes, etc. are already defined as SCSS variables in the partials/variables file. Always use these variables instead of hardcoding values. Never write raw hex codes, px values, or magic numbers directly in a page-level SCSS file.
+No duplicate/one-off classes for the same purpose
+Don't create new classes like .btn-start, .btn-open, .btn-submit-page2 when .btn-primary (or another existing common class) already does the job. Reuse existing common classes across all pages. Only create a new class if the styling need is genuinely different — not just because it's on a different page.
+Common classes live in partials, not in page files
+If a class is reusable (buttons, cards, badges, form controls, etc.), it must be defined once in the shared/partials SCSS files — never inside page-specific files like admin.scss, profile.scss, dashboard.scss, etc. Page-specific SCSS files should only contain truly page-unique layout/styling, not general component styles.
+Centralized changes must cascade everywhere
+Example: if .btn border-radius is changed once in the partials file, it must reflect across the entire site automatically — every page, every module. This is the whole point of using shared classes and variables. Don't override this per page unless there's a real, justified reason.
+No inline styles
+Avoid style="height: 42px;" or similar inline styling in HTML/JSX/templates. All styling must go through SCSS classes. If a one-off adjustment is needed, add a small utility/helper class in the partials file instead of inlining it.
+Bootstrap first, SCSS second
+Prefer Bootstrap's built-in utility classes and components wherever they achieve the required look. Only write custom SCSS when Bootstrap genuinely can't achieve the design, and when you do, base it on the existing SCSS variables.
+
+Goal: consistent look and feel across the entire project, with all shared styling controlled centrally — so changing one variable or one common class updates the whole site instead of requiring changes in multiple files.
+
+
+second rule:
+"Before making any change, think through the full logic and flow — not just the piece you're editing, but everything connected to it. Specifically:
+
+Trace the impact — If I create, edit, or touch a module/function/table, identify every other part of the system that depends on it or is affected by it (data flow, table relationships, API calls, state, UI, etc.).
+Check for conflicts — Will this change break, duplicate, or contradict existing logic elsewhere? Call it out explicitly.
+Validate the logic — Don't just implement what I ask blindly. Check if the logic itself is correct, consistent, and handles edge cases (empty states, nulls, race conditions, wrong order of operations, etc.).
+Think ahead — Consider 'what happens if...' scenarios (e.g., what if this field is empty, what if two users do this at once, what if this runs before that finishes).
+Don't assume — ask — If something is unclear or you're missing context to make a safe decision, ask me instead of guessing.
+Suggest improvements — If you see a better approach, a potential bug, or a design flaw, tell me even if I didn't ask — explain your reasoning simply since I may not know the technical details myself.
+Summarize before/after — Briefly explain what you changed, why, and what else might be affected, so I can verify before moving forward."
+
+
+
+
+
+

@@ -1,0 +1,629 @@
+// ======================================================
+// ADMIN USERS LIST - Style Partial
+// ======================================================
+
+.users-page {
+  padding: $sp-lg;
+  padding-bottom: $sp-xl;
+
+  // Page Header
+  .page-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: $sp-lg;
+    gap: $sp-md;
+    flex-wrap: wrap;
+
+    .header-title-group {
+      .page-main-title {
+        font-size: $tx-2xl;
+        font-weight: 700;
+        color: $text-dark;
+        letter-spacing: -0.02em;
+        margin-bottom: $sp-xs;
+      }
+
+      .page-main-subtitle {
+        font-size: $tx-sm;
+        color: $text-secondary;
+        margin-bottom: 0;
+      }
+    }
+
+    .header-actions-group {
+      display: flex;
+      align-items: center;
+      gap: $sp-sm;
+
+      .btn {
+        font-size: $tx-sm;
+        font-weight: 400;
+        padding: 8px 16px;
+        border-radius: $radius-md;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+    }
+  }
+
+  // 5 Top Stat Summary Cards
+  .admin-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: $sp-md;
+    margin-bottom: $sp-lg;
+
+    @media (max-width: 1200px) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    @media (max-width: 768px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 480px) {
+      grid-template-columns: 1fr;
+    }
+
+    .stat-summary-card {
+      background: $white;
+      border: 1px solid $border;
+      border-radius: $radius-lg;
+      padding: 16px 18px;
+      box-shadow: $shadow-sm;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: transform $transition-fast, box-shadow $transition-fast;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: $shadow-md;
+      }
+
+      .stat-icon-circle {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        @include flex-center;
+        font-size: 18px;
+        flex-shrink: 0;
+
+        &.icon-blue {
+          background-color: $primary-light-bg;
+          color: $primary;
+        }
+
+        &.icon-green {
+          background-color: $success-light;
+          color: $success;
+        }
+
+        &.icon-amber {
+          background-color: $warning-light;
+          color: $warning;
+        }
+
+        &.icon-red {
+          background-color: $danger-light;
+          color: $danger;
+        }
+
+        &.icon-purple {
+          background-color: $purple-light;
+          color: $purple;
+        }
+      }
+
+      .stat-info {
+        .stat-label {
+          font-size: 12.5px;
+          color: $text-secondary;
+          font-weight: 500;
+          margin-bottom: 2px;
+          white-space: nowrap;
+        }
+
+        .stat-number {
+          font-size: 22px;
+          font-weight: 700;
+          color: $text-dark;
+          line-height: 1.2;
+          margin-bottom: 0;
+        }
+      }
+    }
+  }
+
+  // Filter Toolbar Card - Strictly Horizontal on 1 Line
+  .admin-filter-card {
+    background: $white;
+    border: 1px solid $border;
+    border-radius: $radius-lg;
+    padding: 14px 18px;
+    box-shadow: $shadow-sm;
+    margin-bottom: $sp-lg;
+
+    .filter-form-row {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      flex-wrap: nowrap;
+
+      @media (max-width: 1024px) {
+        flex-wrap: wrap;
+      }
+
+      .search-input-wrap {
+        position: relative;
+        flex: 1 1 auto;
+        min-width: 180px;
+
+        .search-icon {
+          position: absolute;
+          left: 12px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: $text-muted;
+          font-size: 13px;
+          pointer-events: none;
+        }
+
+        .form-control {
+          width: 100%;
+          height: 38px;
+          padding-left: 34px;
+          padding-right: 12px;
+          font-size: 13px;
+          border-radius: $radius-md;
+          border: 1px solid $border;
+          color: $text-dark;
+
+          &:focus {
+            border-color: $primary;
+            box-shadow: 0 0 0 3px rgba($primary, 0.12);
+          }
+
+          &::placeholder {
+            color: $text-muted;
+            font-size: 12.5px;
+          }
+        }
+      }
+
+      .filter-select {
+        width: auto !important;
+        flex: 0 0 auto;
+        height: 38px;
+        font-size: 13px;
+        color: $text-body;
+        border-radius: $radius-md;
+        border: 1px solid $border;
+        padding: 6px 30px 6px 12px;
+        min-width: 120px;
+        max-width: 160px;
+
+        &:focus {
+          border-color: $primary;
+          box-shadow: 0 0 0 3px rgba($primary, 0.12);
+        }
+      }
+
+      .filter-btn-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+        margin-left: auto;
+
+        .btn {
+          height: 38px;
+          font-size: 13px;
+          font-weight: 400;
+          padding: 0 16px;
+          border-radius: $radius-md;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          white-space: nowrap;
+        }
+      }
+    }
+  }
+
+  // Administrator Accounts Table Card
+  .admin-table-card {
+    background: $white;
+    border: 1px solid $border;
+    border-radius: $radius-lg;
+    box-shadow: $shadow-sm;
+    margin-bottom: $sp-lg;
+    position: relative;
+
+    .table-card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid $border-light;
+
+      .table-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: $text-dark;
+        margin-bottom: 0;
+      }
+    }
+
+    .table-responsive {
+      overflow-x: auto;
+      min-height: 220px;
+    }
+
+    .admin-accounts-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 0;
+
+      thead th {
+        background: #fafbfc;
+        font-size: 11.5px;
+        font-weight: 600;
+        color: $text-secondary;
+        text-transform: capitalize;
+        padding: 12px 18px;
+        border-bottom: 1px solid $border;
+        white-space: nowrap;
+        vertical-align: middle;
+
+        &.th-action {
+          text-align: right;
+        }
+      }
+
+      tbody td {
+        font-size: 13px;
+        color: $text-body;
+        padding: 13px 18px;
+        border-bottom: 1px solid $border-light;
+        vertical-align: middle;
+        white-space: nowrap;
+
+        &.td-action {
+          text-align: right;
+        }
+      }
+
+      tbody tr {
+        transition: background-color $transition-fast;
+
+        &:hover {
+          background-color: #f8fafc;
+        }
+
+        &:last-child td {
+          border-bottom: none;
+        }
+      }
+    }
+
+    // User Avatar & Name Cell
+    .admin-user-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .admin-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        @include flex-center;
+        font-size: 12px;
+        font-weight: 700;
+        color: $white;
+        flex-shrink: 0;
+
+        &.av-teal { background-color: $info; }
+        &.av-green { background-color: $success; }
+        &.av-purple { background-color: $purple; }
+        &.av-orange { background-color: $orange; }
+        &.av-cyan { background-color: $info-blue; }
+        &.av-red { background-color: $danger; }
+        &.av-grey { background-color: $text-secondary; }
+      }
+
+      .admin-meta-info {
+        .admin-name {
+          font-size: 13.5px;
+          font-weight: 600;
+          color: $text-dark;
+          line-height: 1.2;
+          margin-bottom: 2px;
+        }
+
+        .admin-email {
+          font-size: 12px;
+          color: $text-secondary;
+          line-height: 1;
+        }
+      }
+    }
+
+    .admin-id-text {
+      font-size: 12.5px;
+      font-weight: 500;
+      color: $text-secondary;
+    }
+
+    // Role Pill Badges
+    .role-pill {
+      font-size: 11.5px;
+      font-weight: 500;
+      padding: 2px 10px;
+      border-radius: 9999px;
+      display: inline-block;
+      white-space: nowrap;
+
+      &.role-super-admin {
+        background-color: #eff6ff;
+        color: #2563eb;
+        border: 1px solid rgba(37, 99, 235, 0.2);
+      }
+
+      &.role-ops-admin {
+        background-color: #eff6ff;
+        color: #3b82f6;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+      }
+
+      &.role-analytics-admin {
+        background-color: #f5f3ff;
+        color: #7c3aed;
+        border: 1px solid rgba(124, 58, 237, 0.2);
+      }
+
+      &.role-support-admin {
+        background-color: #fff7ed;
+        color: #ea580c;
+        border: 1px solid rgba(234, 88, 12, 0.2);
+      }
+
+      &.role-release-manager {
+        background-color: #ecfeff;
+        color: #0891b2;
+        border: 1px solid rgba(8, 145, 178, 0.2);
+      }
+
+      &.role-ads-manager {
+        background-color: #fdf4ff;
+        color: #c026d3;
+        border: 1px solid rgba(192, 38, 211, 0.2);
+      }
+
+      &.role-auditor {
+        background-color: #fef2f2;
+        color: #dc2626;
+        border: 1px solid rgba(220, 38, 38, 0.2);
+      }
+    }
+
+    // 2FA Pill Badges
+    .two-fa-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11.5px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      white-space: nowrap;
+
+      &.enabled {
+        background-color: $success-light;
+        color: $success-text;
+        border: 1px solid rgba($success, 0.2);
+
+        i {
+          font-size: 11px;
+        }
+      }
+
+      &.pending {
+        background-color: $warning-light;
+        color: $warning-text;
+        border: 1px solid rgba($warning, 0.2);
+
+        i {
+          font-size: 11px;
+        }
+      }
+    }
+
+    // Status Pill Badges
+    .status-pill {
+      font-size: 11.5px;
+      font-weight: 500;
+      padding: 2px 10px;
+      border-radius: 9999px;
+      display: inline-block;
+      white-space: nowrap;
+
+      &.status-active {
+        background-color: $success-light;
+        color: $success-text;
+      }
+
+      &.status-suspended {
+        background-color: $danger-light;
+        color: $danger-text;
+      }
+
+      &.status-pending {
+        background-color: $warning-light;
+        color: $warning-text;
+      }
+    }
+
+    // Actions 3-Dots Button & Popup
+    .action-dropdown-wrap {
+      position: relative;
+      display: inline-block;
+
+      .btn-action-dots {
+        width: 32px;
+        height: 32px;
+        border-radius: $radius-md;
+        border: 1px solid $border;
+        background: $white;
+        color: $text-secondary;
+        @include flex-center;
+        font-size: 14px;
+        padding: 0;
+        cursor: pointer;
+        transition: all $transition-fast;
+
+        &:hover, &:focus, &[aria-expanded="true"] {
+          background-color: $bg-panel;
+          color: $text-dark;
+          border-color: $border;
+        }
+      }
+
+      .admin-action-dropdown-menu {
+        position: absolute;
+        right: 0;
+        top: 100%;
+        z-index: 1050;
+        min-width: 220px;
+        background: $white;
+        border: 1px solid $border;
+        border-radius: $radius-lg;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12), 0 4px 6px rgba(0, 0, 0, 0.04);
+        padding: 6px 0;
+        margin-top: 4px;
+        display: none;
+
+        &.show {
+          display: block;
+        }
+
+        .menu-category-header {
+          padding: 6px 16px;
+          font-size: 10.5px;
+          font-weight: 700;
+          color: $text-muted;
+          letter-spacing: 0.5px;
+          text-transform: uppercase;
+        }
+
+        .action-menu-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 7px 16px;
+          font-size: 12.5px;
+          color: $text-body;
+          font-weight: 500;
+          text-decoration: none;
+          cursor: pointer;
+          transition: background-color $transition-fast, color $transition-fast;
+
+          i {
+            width: 16px;
+            font-size: 13px;
+            color: $text-muted;
+            text-align: center;
+            flex-shrink: 0;
+          }
+
+          &:hover:not(.disabled) {
+            background-color: $bg-panel;
+            color: $primary;
+
+            i {
+              color: $primary;
+            }
+          }
+
+          &.item-assign-roles i {
+            color: $purple;
+          }
+
+          &.item-message i {
+            color: $info;
+          }
+
+          &.item-warning {
+            color: $warning-text;
+
+            i {
+              color: $warning;
+            }
+
+            &:hover {
+              background-color: $warning-light;
+              color: $warning-text;
+            }
+          }
+
+          &.item-danger {
+            color: $danger-text;
+
+            i {
+              color: $danger;
+            }
+
+            &:hover {
+              background-color: $danger-light;
+              color: $danger-text;
+            }
+          }
+
+          &.disabled {
+            opacity: 0.45;
+            cursor: not-allowed !important;
+            pointer-events: none;
+          }
+        }
+
+        .menu-divider {
+          height: 1px;
+          background-color: $border-light;
+          margin: 4px 0;
+        }
+      }
+    }
+
+    // Table Footer
+    .table-footer-bar {
+      padding: 14px 20px;
+      border-top: 1px solid $border-light;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12.5px;
+      color: $text-secondary;
+    }
+  }
+
+  // Audit Alert Banner
+  .alert-audit-note {
+    background-color: $primary-light-bg;
+    border: 1px solid rgba($primary, 0.2);
+    border-radius: $radius-md;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: $primary-dark;
+    font-size: $tx-sm;
+    font-weight: 400;
+
+    i {
+      font-size: 16px;
+      color: $primary;
+      flex-shrink: 0;
+    }
+  }
+}

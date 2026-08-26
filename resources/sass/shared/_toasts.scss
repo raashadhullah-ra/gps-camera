@@ -1,0 +1,156 @@
+// ======================================================
+// SHARED TOAST NOTIFICATION STYLES
+// Exact Design matching screenshot: Left colored accent bar,
+// round solid icon badge, title, subtitle, right close button
+// ======================================================
+
+.geocam-toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10600;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+  max-width: calc(100vw - 40px);
+}
+
+.geocam-toast {
+  pointer-events: auto;
+  min-width: 310px;
+  max-width: 400px;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  padding: 12px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), margin-top 0.25s ease;
+
+  &.geocam-toast-show {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  &.geocam-toast-hide {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+
+  // Left vertical color accent bar
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 4px;
+  }
+
+  // Type variants
+  &.toast-success {
+    &::before {
+      background-color: #10b981;
+    }
+    .toast-icon-circle {
+      background-color: #10b981;
+      color: #ffffff;
+    }
+  }
+
+  &.toast-error,
+  &.toast-danger {
+    &::before {
+      background-color: #ef4444;
+    }
+    .toast-icon-circle {
+      background-color: #ef4444;
+      color: #ffffff;
+    }
+  }
+
+  &.toast-warning {
+    &::before {
+      background-color: #f59e0b;
+    }
+    .toast-icon-circle {
+      background-color: #f59e0b;
+      color: #ffffff;
+    }
+  }
+
+  &.toast-info {
+    &::before {
+      background-color: #3b82f6;
+    }
+    .toast-icon-circle {
+      background-color: #3b82f6;
+      color: #ffffff;
+    }
+  }
+
+  // Left Solid Circle Icon
+  .toast-icon-circle {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  // Text content area
+  .toast-content {
+    flex: 1 1 auto;
+    min-width: 0;
+
+    .toast-title {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #1e293b;
+      line-height: 1.3;
+      margin-bottom: 0;
+    }
+
+    .toast-message {
+      font-size: 12px;
+      color: #475569;
+      line-height: 1.35;
+      margin-top: 2px;
+      margin-bottom: 0;
+      word-break: break-word;
+    }
+  }
+
+  // Right Close button
+  .toast-close-btn {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    color: #94a3b8;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s ease;
+    margin-top: 2px;
+
+    &:hover {
+      color: #334155;
+    }
+  }
+}

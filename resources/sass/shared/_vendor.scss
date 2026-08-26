@@ -1,0 +1,69 @@
+// ======================================================
+// SHARED VENDOR - Third Party Library Overrides
+// ======================================================
+
+.form-check-input:checked {
+  background-color: $primary;
+  border-color: $primary;
+}
+
+.form-switch .form-check-input {
+  width: 2.25em;
+  height: 1.25em;
+  cursor: pointer;
+}
+
+// ------------------------------------------------------
+// SweetAlert2 Modern Toast & Popup Styling
+// ------------------------------------------------------
+.swal2-container.swal2-top-end,
+.swal2-container.swal2-top-right {
+  z-index: 10000 !important;
+  top: 20px !important;
+  right: 20px !important;
+}
+
+.swal2-popup.swal2-toast {
+  font-family: $font-family-base !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid rgba(226, 232, 240, 0.9) !important;
+  padding: 12px 16px !important;
+  background: #ffffff !important;
+  color: #1e293b !important;
+
+  .swal2-title {
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    line-height: 1.4 !important;
+  }
+
+  .swal2-html-container {
+    font-size: 12.5px !important;
+    color: #64748b !important;
+    margin: 4px 0 0 !important;
+  }
+
+  .swal2-icon {
+    margin: 0 10px 0 0 !important;
+    transform: scale(0.85);
+  }
+
+  .swal2-close {
+    font-size: 18px !important;
+    color: #94a3b8 !important;
+    transition: color 0.15s ease-in-out;
+    &:hover {
+      color: #334155 !important;
+    }
+  }
+
+  .swal2-timer-progress-bar {
+    background: rgba(14, 165, 233, 0.75) !important;
+    height: 3px !important;
+  }
+}

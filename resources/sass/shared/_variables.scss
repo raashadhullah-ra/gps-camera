@@ -1,0 +1,143 @@
+// ======================================================
+// SHARED VARIABLES - Global Design Tokens & Color Palette
+// ======================================================
+
+// Design Tokens & Color Palette
+
+// Color Palette - Brand & State Colors
+$primary: #0d6efd;
+$primary-hover: #0b5ed7;
+$primary-dark: #071a39;
+$primary-light-bg: #eff6ff;
+
+$success: #10b981;
+$success-light: #e6f9f0;
+$success-text: #16a34a;
+
+$danger: #ef4444;
+$danger-light: #fee2e2;
+$danger-border: #fecaca;
+$danger-text: #dc2626;
+
+$warning: #f59e0b;
+$warning-light: #fef3c7;
+$warning-text: #b45309;
+
+$info: #0d9488;
+$info-blue: #0ea5e9;
+
+$purple: #a855f7;
+$purple-light: #f3e8ff;
+$orange: #f97316;
+$orange-light: #ffedd5;
+$teal-light: #ccfbf1;
+
+// Grays & Backgrounds
+$white: #ffffff;
+$bg-canvas: #f4f6fa;
+$bg-panel: #f8fafc;
+$border: #e2e8f0;
+$border-light: #f1f5f9;
+
+$gray-50: #f8fafc;
+$gray-100: #f1f5f9;
+$gray-200: #e2e8f0;
+$gray-300: #cbd5e1;
+$gray-400: #94a3b8;
+$gray-500: #64748b;
+$gray-600: #475569;
+$gray-700: #334155;
+$gray-800: #1e293b;
+$gray-900: #0f172a;
+
+$text-dark: #0f172a;
+$text-body: #475569;
+$text-secondary: #64748b;
+$text-muted: #94a3b8;
+
+// Layout Dimensions
+$sidebar-bg: #071a39;
+$navbar-bg: #ffffff;
+$sidebar-width: 260px;
+$navbar-height: 70px;
+
+// Typography Scale
+$font-family-sans-serif: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+$font-family-base: $font-family-sans-serif;
+$headings-font-family: $font-family-sans-serif;
+$headings-font-weight: 600;
+$headings-color: $text-dark;
+$tx-xxs: 10px;
+$tx-xs: 12px;
+$tx-sm: 13px;
+$tx-sm2: 14px;
+$tx-md: 15px;
+$tx-lg: 18px;
+$tx-xl: 20px;
+$tx-2xl: 24px;
+
+// Spacing Scale
+$sp-xs: 4px;
+$sp-sm: 8px;
+$sp-md: 16px;
+$sp-lg: 24px;
+$sp-xl: 32px;
+
+// Radii & Shadows
+$radius-sm: 6px;
+$radius-md: 8px;
+$radius-lg: 12px;
+$radius-xl: 16px;
+$radius-full: 9999px;
+$badge-radius: 20px;
+$badge-padding-y: 4px;
+$badge-padding-x: 12px;
+
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+$shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+$shadow-md: 0 4px 12px rgba(13, 110, 253, 0.2);
+$shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+
+// Transitions
+$transition-fast: 150ms ease;
+$transition-base: 200ms ease;
+
+// Bootstrap Variable Overrides
+$primary: $primary;
+$secondary: $primary-dark;
+$success: $success;
+$danger: $danger;
+$warning: $warning;
+$info: $info-blue;
+$body-bg: $bg-canvas;
+$body-color: $text-body;
+$border-color: $border;
+$btn-font-weight: 500;
+$btn-border-radius: 8px;
+$btn-border-radius-sm: 6px;
+$input-border-radius: 8px;
+$card-border-radius: 16px;
+$card-border-color: $border;
+
+// Runtime CSS Custom Properties
+:root {
+  --primary: #{$primary};
+  --primary-hover: #{$primary-hover};
+  --primary-dark: #{$primary-dark};
+  --success: #{$success};
+  --danger: #{$danger};
+  --warning: #{$warning};
+  --info: #{$info};
+  --muted: #{$text-muted};
+  --bg: #{$bg-canvas};
+  --card-bg: #{$white};
+  --border: #{$border};
+  --text-dark: #{$text-dark};
+  --text: #{$text-body};
+  --sidebar-width: #{$sidebar-width};
+  --navbar-height: #{$navbar-height};
+  --font-family-base: #{$font-family-sans-serif};
+}
