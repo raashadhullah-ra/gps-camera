@@ -79,6 +79,31 @@ class DeviceApiController extends Controller
         // Detect client IP
         $data['ip_address'] = $request->ip();
 
+        // Geolocation resolution
+        $lat = $data['latitude'] ?? null;
+        $lng = $data['longitude'] ?? null;
+
+        // If GPS coordinates are provided but address fields are missing, reverse geocode
+        if ($lat !== null && $lng !== null && empty($data['city'])) {
+            $geo = $this->resolveReverseGeocode((float) $lat, (float) $lng);
+            if (!empty($geo['city'])) $data['city'] = $geo['city'];
+            if (!empty($geo['state']) && empty($data['state'])) $data['state'] = $geo['state'];
+            if (!empty($geo['country']) && empty($data['country'])) $data['country'] = $geo['country'];
+            if (!empty($geo['country_code']) && empty($data['country_code'])) $data['country_code'] = $geo['country_code'];
+        } elseif (($lat === null || $lng === null) && empty($data['city']) && !empty($data['ip_address'])) {
+            // Fallback: try resolving public IP location
+            $ipGeo = $this->resolveIpLocation($data['ip_address']);
+            if (!empty($ipGeo)) {
+                if (empty($data['city']) && !empty($ipGeo['city'])) $data['city'] = $ipGeo['city'];
+                if (empty($data['state']) && !empty($ipGeo['state'])) $data['state'] = $ipGeo['state'];
+                if (empty($data['country']) && !empty($ipGeo['country'])) $data['country'] = $ipGeo['country'];
+                if (empty($data['country_code']) && !empty($ipGeo['country_code'])) $data['country_code'] = $ipGeo['country_code'];
+                if (empty($data['latitude']) && !empty($ipGeo['latitude'])) $data['latitude'] = $ipGeo['latitude'];
+                if (empty($data['longitude']) && !empty($ipGeo['longitude'])) $data['longitude'] = $ipGeo['longitude'];
+                if (empty($data['timezone']) && !empty($ipGeo['timezone'])) $data['timezone'] = $ipGeo['timezone'];
+            }
+        }
+
         // Find or instantiate device by unique installation_id
         $device = Device::where('installation_id', $data['installation_id'])->first();
 
@@ -123,9 +148,85 @@ class DeviceApiController extends Controller
                 'is_active'                => $device->is_active,
                 'platform'                 => $device->platform,
                 'app_version'              => $device->app_version,
+                'city'                     => $device->city,
+                'state'                    => $device->state,
+                'country'                  => $device->country,
+                'latitude'                 => $device->latitude,
+                'longitude'                => $device->longitude,
                 'total_sessions_count'     => $device->total_sessions_count,
                 'last_active_at'           => $device->last_active_at?->toISOString(),
             ],
         ], $isNew ? 201 : 200);
+    }
+
+    /**
+     * Resolve reverse geocoding via OpenStreetMap Nominatim with fast timeout.
+     */
+    protected function resolveReverseGeocode(float $lat, float $lng): array
+    {
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(3)
+                ->withHeaders(['User-Agent' => 'GeoCam-Admin-App/1.0'])
+                ->get('https://nominatim.openstreetmap.org/reverse', [
+                    'format' => 'json',
+                    'lat'    => $lat,
+                    'lon'    => $lng,
+                    'zoom'   => 10,
+                    'addressdetails' => 1,
+                ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                $address = $data['address'] ?? [];
+
+                $city = $address['city'] ?? $address['town'] ?? $address['village'] ?? $address['municipality'] ?? $address['county'] ?? $address['state_district'] ?? null;
+                $state = $address['state'] ?? $address['region'] ?? null;
+                $country = $address['country'] ?? null;
+                $countryCode = isset($address['country_code']) ? strtoupper($address['country_code']) : null;
+
+                return array_filter([
+                    'city'         => $city,
+                    'state'        => $state,
+                    'country'      => $country,
+                    'country_code' => $countryCode,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::debug('Reverse geocode error: ' . $e->getMessage());
+        }
+
+        return [];
+    }
+
+    /**
+     * Resolve IP Geolocation fallback for public IPs.
+     */
+    protected function resolveIpLocation(string $ip): array
+    {
+        if (in_array($ip, ['127.0.0.1', '::1']) || filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+            return [];
+        }
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(3)
+                ->get("http://ip-api.com/json/{$ip}?fields=status,country,countryCode,regionName,city,lat,lon,timezone");
+
+            if ($response->successful() && ($response->json('status') === 'success')) {
+                $res = $response->json();
+                return [
+                    'city'         => $res['city'] ?? null,
+                    'state'        => $res['regionName'] ?? null,
+                    'country'      => $res['country'] ?? null,
+                    'country_code' => $res['countryCode'] ?? null,
+                    'latitude'     => $res['lat'] ?? null,
+                    'longitude'    => $res['lon'] ?? null,
+                    'timezone'     => $res['timezone'] ?? null,
+                ];
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::debug('IP Geo error: ' . $e->getMessage());
+        }
+
+        return [];
     }
 }

@@ -19,9 +19,11 @@ return new class extends Migration
             $table->text('message');
             $table->string('action', 50)->default('Open App');
             $table->string('action_url', 255)->nullable();
+            $table->string('image_url', 500)->nullable();
+            $table->text('custom_payload')->nullable();
             
             // Audience Targeting
-            $table->enum('audience_type', ['individual', 'segment', 'all'])->default('segment');
+            $table->enum('audience_type', ['individual', 'segment', 'location', 'all'])->default('segment');
             $table->string('audience_label', 150)->nullable();
             $table->foreignId('segment_id')->nullable()->constrained('audience_segments')->nullOnDelete();
             $table->json('target_device_ids')->nullable();

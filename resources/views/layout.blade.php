@@ -20,8 +20,8 @@
         <aside class="sidebar-panel">
             <div class="sidebar-header">
                 <div class="sidebar-logo">
-                    <img src="{{ asset('assets/Logos/Geo icon.png') }}" alt="GeoCam Logo" class="logo-img">
-                    <span class="logo-text">GPS Camera Admin</span>
+                    <img src="{{ asset('assets/Logos/weblogo.png') }}" alt="GeoCam Logo" class="logo-img">
+                    <span class="logo-text">Raiyaan apps Admin</span>
                 </div>
             </div>
 

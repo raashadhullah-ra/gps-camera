@@ -135,6 +135,25 @@
         display: flex;
         align-items: center;
         margin-bottom: 1rem;
+        user-select: none;
+
+        &.collapsible-trigger {
+            cursor: pointer;
+            margin-bottom: 0;
+            padding: 0.1rem 0;
+
+            .section-collapse-chevron {
+                font-size: 0.85rem;
+                color: $gray-400;
+                transition: transform 0.25s ease;
+            }
+
+            &.collapsed {
+                .section-collapse-chevron {
+                    transform: rotate(-180deg);
+                }
+            }
+        }
 
         .step-number {
             width: 24px;
@@ -148,6 +167,7 @@
             font-size: 0.75rem;
             font-weight: $font-weight-bold;
             margin-right: 0.65rem;
+            flex-shrink: 0;
         }
 
         .section-title {
@@ -311,20 +331,19 @@
     margin-bottom: 1.25rem;
     box-shadow: $shadow-sm;
 
-    .stat-hero-number {
-        font-size: 1.65rem;
-        font-weight: $font-weight-bold;
-        color: $primary;
-        line-height: 1.1;
-    }
-
+    .stat-hero-number,
     .stat-sub-number {
-        font-size: 1.2rem;
+        font-size: 1.35rem;
         font-weight: $font-weight-bold;
-        line-height: 1.1;
+        line-height: 1.15;
+        margin-bottom: 0.15rem;
+        display: block;
 
+        &.eligible {
+            color: $primary;
+        }
         &.deliverable {
-            color: $success;
+            color: #10b981;
         }
         &.excluded {
             color: #ef4444;

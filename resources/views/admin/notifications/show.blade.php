@@ -41,7 +41,7 @@
                 <i class="fa-solid fa-arrow-left"></i>
                 <span>Back to Notifications</span>
             </a>
-            <a href="{{ route('admin.locations.send-notification-global') }}" class="btn btn-primary btn-sm">
+            <a href="{{ route('admin.notifications.edit', $campaign->id) }}" class="btn btn-primary btn-sm">
                 <i class="fa-solid fa-pen"></i>
                 <span>Edit Notification</span>
             </a>
@@ -130,14 +130,18 @@
                     </div>
                     <h2>Delivery Schedule</h2>
                 </div>
+                @php
+                    $schedTz = $campaign->time_zone ?: 'Asia/Kolkata';
+                    $localScheduledAt = $campaign->scheduled_at ? $campaign->scheduled_at->timezone($schedTz) : null;
+                @endphp
                 <div class="spec-table-list">
                     <div class="spec-table-row">
                         <span class="spec-table-label">Scheduled Date</span>
-                        <span class="spec-table-val fw-semibold">{{ $campaign->scheduled_at?->format('d M Y') ?? '26 Aug 2026' }}</span>
+                        <span class="spec-table-val fw-semibold">{{ $localScheduledAt ? $localScheduledAt->format('d M Y') : 'Not scheduled' }}</span>
                     </div>
                     <div class="spec-table-row">
                         <span class="spec-table-label">Scheduled Time</span>
-                        <span class="spec-table-val fw-semibold">{{ $campaign->scheduled_at?->format('h:i A') ?? '10:30 AM' }} {{ $campaign->time_zone === 'Asia/Kolkata' ? 'IST' : '' }}</span>
+                        <span class="spec-table-val fw-semibold">{{ $localScheduledAt ? $localScheduledAt->format('h:i A') : '10:30 AM' }} {{ $schedTz === 'Asia/Kolkata' ? 'IST' : $schedTz }}</span>
                     </div>
                     <div class="spec-table-row">
                         <span class="spec-table-label">Time Zone</span>

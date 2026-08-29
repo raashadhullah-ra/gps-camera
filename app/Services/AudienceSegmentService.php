@@ -54,6 +54,95 @@ class AudienceSegmentService
     }
 
     /**
+     * Get available values for visual segment rule dropdowns.
+     */
+    public function getRuleOptions(): array
+    {
+        $hierarchy = $this->getLocationHierarchy();
+        $countries = array_keys($hierarchy);
+        if (empty($countries)) {
+            $countries = ['India', 'United States', 'United Kingdom', 'Brazil', 'Indonesia', 'Japan', 'UAE'];
+        }
+
+        $states = [];
+        $cities = [];
+        foreach ($hierarchy as $country => $stateMap) {
+            foreach ($stateMap as $st => $cityList) {
+                $states[] = $st;
+                foreach ($cityList as $ct) {
+                    $cities[] = $ct;
+                }
+            }
+        }
+        $states = array_values(array_unique(array_filter($states)));
+        $cities = array_values(array_unique(array_filter($cities)));
+
+        if (empty($states)) {
+            $states = ['Tamil Nadu', 'Karnataka', 'New York', 'Dubai', 'England', 'Jakarta', 'São Paulo', 'Tokyo Prefecture'];
+        }
+        if (empty($cities)) {
+            $cities = ['Tirunelveli', 'Chennai', 'Bengaluru', 'Dubai', 'Jakarta', 'London', 'New York', 'São Paulo', 'Tokyo'];
+        }
+
+        return [
+            'Country'                 => $countries,
+            'State / Region'          => $states,
+            'City'                    => $cities,
+            'Platform'                => ['Android', 'iOS'],
+            'Activity Status'         => ['Active', 'Inactive'],
+            'Last Active'             => ['7 days', '14 days', '30 days', '60 days', '90 days'],
+            'First Open'              => ['7 days', '14 days', '30 days', '60 days', '90 days'],
+            'Notification Permission' => ['Enabled', 'Disabled'],
+            'Location Permission'     => ['Precise', 'Approximate', 'Denied'],
+            'Camera Permission'       => ['Granted', 'Denied'],
+            'App Version'             => ['v1.4.2', 'v1.4.1', 'v1.4.0', 'All Versions'],
+        ];
+    }
+
+    /**
+     * Get Country -> State -> City hierarchy for smart cascading rule dropdowns.
+     * Automatically discovers new locations dynamically from Locations and Devices tables.
+     */
+    public function getLocationHierarchy(): array
+    {
+        $locations = \App\Models\Location::select('country', 'state', 'city')
+            ->whereNotNull('country')
+            ->distinct()
+            ->get();
+
+        $deviceLocations = \App\Models\Device::select('country', 'state', 'city')
+            ->whereNotNull('country')
+            ->distinct()
+            ->get();
+
+        $allLocations = $locations->concat($deviceLocations);
+
+        $hierarchy = [];
+        foreach ($allLocations as $loc) {
+            $country = trim($loc->country ?? '');
+            $state   = trim($loc->state ?? '');
+            $city    = trim($loc->city ?? '');
+
+            if (!$country) continue;
+
+            if (!isset($hierarchy[$country])) {
+                $hierarchy[$country] = [];
+            }
+
+            if ($state) {
+                if (!isset($hierarchy[$country][$state])) {
+                    $hierarchy[$country][$state] = [];
+                }
+                if ($city && !in_array($city, $hierarchy[$country][$state])) {
+                    $hierarchy[$country][$state][] = $city;
+                }
+            }
+        }
+
+        return $hierarchy;
+    }
+
+    /**
      * Get filtered and paginated audience segments list.
      */
     public function getFilteredSegments(Request $request, int $perPage = 10): LengthAwarePaginator

@@ -96,6 +96,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/', [NotificationController::class, 'store'])->name('admin.notifications.store');
         Route::get('/export', [NotificationController::class, 'export'])->name('admin.notifications.export');
         Route::get('/{id}', [NotificationController::class, 'show'])->name('admin.notifications.show');
+        Route::get('/{id}/edit', [NotificationController::class, 'edit'])->name('admin.notifications.edit');
+        Route::put('/{id}', [NotificationController::class, 'update'])->name('admin.notifications.update');
         Route::post('/{id}/duplicate', [NotificationController::class, 'duplicate'])->name('admin.notifications.duplicate');
         Route::post('/{id}/reschedule', [NotificationController::class, 'reschedule'])->name('admin.notifications.reschedule');
         Route::post('/{id}/send-now', [NotificationController::class, 'sendNow'])->name('admin.notifications.send-now');

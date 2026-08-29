@@ -29,6 +29,9 @@ class NotificationController extends Controller
      */
     public function index(Request $request): View
     {
+        // Process any due scheduled campaigns immediately
+        $this->notificationService->processDueScheduledNotifications();
+
         $filters = $request->only([
             'tab',
             'search',
@@ -58,11 +61,12 @@ class NotificationController extends Controller
      */
     public function create(): View
     {
+        $audienceMetrics = $this->notificationService->getAudienceMetrics();
         $segments = \App\Models\AudienceSegment::all();
         $locations = \App\Models\Location::orderBy('city')->get();
-        $devices = \App\Models\Device::latest()->take(20)->get();
+        $devices = \App\Models\Device::latest()->get();
 
-        return view('admin.notifications.create', compact('segments', 'locations', 'devices'));
+        return view('admin.notifications.create', compact('audienceMetrics', 'segments', 'locations', 'devices'));
     }
 
     /**
@@ -74,16 +78,34 @@ class NotificationController extends Controller
     public function store(Request $request): RedirectResponse|JsonResponse
     {
         $request->validate([
-            'name'          => 'required|string|max:150',
-            'title'         => 'required|string|max:100',
-            'message'       => 'required|string|max:200',
-            'action'        => 'nullable|string',
-            'deep_link'     => 'nullable|string',
-            'audience_type' => 'required|string',
-            'status'        => 'nullable|string',
+            'name'           => 'required|string|max:150',
+            'title'          => 'required|string|max:100',
+            'message'        => 'required|string|max:200',
+            'image'          => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'action'         => 'nullable|string',
+            'deep_link'      => 'nullable|string',
+            'audience_type'  => 'required|string',
+            'status'         => 'nullable|string',
+            'custom_payload' => 'nullable|string',
         ]);
 
-        $campaign = $this->notificationService->createCampaign($request->all());
+        $data = $request->all();
+
+        if ($request->hasFile('image')) {
+            $imageFile = $request->file('image');
+            $originalBase = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+            $cleanName = \Illuminate\Support\Str::slug($originalBase) ?: 'notification';
+            $dateTime = date('Ymd_His');
+            $uniqueSuffix = substr(uniqid(), -4);
+            $extension = strtolower($imageFile->getClientOriginalExtension());
+
+            // Saved format: noti_20260827_095812_a1b2.jpg (prevents collisions & preserves naming + date + time)
+            $imageName = "{$cleanName}_{$dateTime}_{$uniqueSuffix}.{$extension}";
+            $path = $imageFile->storeAs('notifications', $imageName, 'public');
+            $data['image_url'] = '/storage/' . $path;
+        }
+
+        $campaign = $this->notificationService->createCampaign($data);
 
         if ($request->wantsJson()) {
             return response()->json([
@@ -105,9 +127,79 @@ class NotificationController extends Controller
      */
     public function show($id): View
     {
+        // Process any due scheduled campaigns immediately
+        $this->notificationService->processDueScheduledNotifications();
+
         $campaign = $this->notificationService->findCampaign($id);
 
         return view('admin.notifications.show', compact('campaign'));
+    }
+
+    /**
+     * Show the form for editing the specified notification campaign.
+     *
+     * @param  int|string  $id
+     * @return View
+     */
+    public function edit($id): View
+    {
+        $campaign = $this->notificationService->findCampaign($id);
+        $audienceMetrics = $this->notificationService->getAudienceMetrics();
+        $segments = \App\Models\AudienceSegment::all();
+        $locations = \App\Models\Location::orderBy('city')->get();
+        $devices = \App\Models\Device::latest()->get();
+
+        return view('admin.notifications.edit', compact('campaign', 'audienceMetrics', 'segments', 'locations', 'devices'));
+    }
+
+    /**
+     * Update the specified notification campaign.
+     *
+     * @param  Request  $request
+     * @param  int|string  $id
+     * @return RedirectResponse|JsonResponse
+     */
+    public function update(Request $request, $id): RedirectResponse|JsonResponse
+    {
+        $request->validate([
+            'name'           => 'required|string|max:150',
+            'title'          => 'required|string|max:100',
+            'message'        => 'required|string|max:200',
+            'image'          => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'action'         => 'nullable|string',
+            'deep_link'      => 'nullable|string',
+            'audience_type'  => 'required|string',
+            'status'         => 'nullable|string',
+            'custom_payload' => 'nullable|string',
+        ]);
+
+        $data = $request->all();
+
+        if ($request->hasFile('image')) {
+            $imageFile = $request->file('image');
+            $originalBase = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+            $cleanName = \Illuminate\Support\Str::slug($originalBase) ?: 'notification';
+            $dateTime = date('Ymd_His');
+            $uniqueSuffix = substr(uniqid(), -4);
+            $extension = strtolower($imageFile->getClientOriginalExtension());
+
+            $imageName = "{$cleanName}_{$dateTime}_{$uniqueSuffix}.{$extension}";
+            $path = $imageFile->storeAs('notifications', $imageName, 'public');
+            $data['image_url'] = '/storage/' . $path;
+        }
+
+        $campaign = $this->notificationService->updateCampaign($id, $data);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success'  => true,
+                'message'  => 'Notification campaign updated successfully.',
+                'campaign' => $campaign,
+            ]);
+        }
+
+        return redirect()->route('admin.notifications.index')
+            ->with('success', 'Notification campaign updated successfully.');
     }
 
     /**

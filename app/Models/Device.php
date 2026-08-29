@@ -157,23 +157,65 @@ class Device extends Model
     }
 
     /**
-     * Get formatted location string (e.g. "Tirunelveli, India").
+     * Check if device has any location data (city, country, or coordinates).
+     */
+    public function getHasLocationAttribute(): bool
+    {
+        return !empty($this->city) || !empty($this->country) || ($this->latitude !== null && $this->longitude !== null);
+    }
+
+    /**
+     * Check if device has valid GPS latitude & longitude coordinates.
+     */
+    public function getHasCoordinatesAttribute(): bool
+    {
+        return $this->latitude !== null && $this->longitude !== null;
+    }
+
+    /**
+     * Get formatted coordinates string (e.g., "13.082700, 80.270700").
+     */
+    public function getCoordinatesFormattedAttribute(): ?string
+    {
+        if ($this->latitude !== null && $this->longitude !== null) {
+            return number_format((float) $this->latitude, 6) . ', ' . number_format((float) $this->longitude, 6);
+        }
+        return null;
+    }
+
+    /**
+     * Get formatted location string (e.g. "Chennai, India").
      */
     public function getLocationFormattedAttribute(): string
     {
         if ($this->city && $this->country) {
             return "{$this->city}, {$this->country}";
         }
-        return $this->country ?? $this->city ?? 'Unknown Location';
+        if ($this->city) {
+            return $this->city;
+        }
+        if ($this->country) {
+            return $this->country;
+        }
+        if ($this->latitude !== null && $this->longitude !== null) {
+            return number_format((float) $this->latitude, 4) . ', ' . number_format((float) $this->longitude, 4);
+        }
+        return 'Location Unavailable';
     }
 
     /**
-     * Full location with state (e.g. "Tirunelveli, Tamil Nadu, India").
+     * Full location with state (e.g. "Chennai, Tamil Nadu, India").
      */
     public function getFullLocationFormattedAttribute(): string
     {
         $parts = array_filter([$this->city, $this->state, $this->country]);
-        return count($parts) > 0 ? implode(', ', $parts) : 'Tirunelveli, Tamil Nadu, India';
+        if (count($parts) > 0) {
+            return implode(', ', $parts);
+        }
+        if ($this->latitude !== null && $this->longitude !== null) {
+            return 'GPS: ' . number_format((float) $this->latitude, 6) . ', ' . number_format((float) $this->longitude, 6);
+        }
+        return 'Location Not Available';
     }
 
     /**

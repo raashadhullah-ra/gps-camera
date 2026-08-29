@@ -1,41 +1,49 @@
 @extends('layout')
 
-@section('title', 'Create Notification - GeoCam Admin')
-@section('page_title', 'Create Notification')
+@section('title', 'Edit Notification - ' . ($campaign->name ?: $campaign->title) . ' - GeoCam Admin')
+@section('page_title', 'Edit Notification')
 
 @section('breadcrumbs')
     <span class="text-muted">Engagement</span>
     <i class="fa-solid fa-chevron-right fs-10 mx-1"></i>
     <a href="{{ route('admin.notifications.index') }}" class="text-muted text-decoration-none">Notifications</a>
     <i class="fa-solid fa-chevron-right fs-10 mx-1"></i>
-    <span class="active-crumb">Create Notification</span>
+    <a href="{{ route('admin.notifications.show', $campaign->id) }}" class="text-muted text-decoration-none">{{ $campaign->name ?: 'Notification' }}</a>
+    <i class="fa-solid fa-chevron-right fs-10 mx-1"></i>
+    <span class="active-crumb">Edit Notification</span>
 @endsection
 
 @section('content')
+@php
+    $schedTz = $campaign->time_zone ?: 'Asia/Kolkata';
+    $localScheduledAt = $campaign->scheduled_at ? $campaign->scheduled_at->timezone($schedTz) : null;
+@endphp
 <div class="create-notification-page">
-    <form action="{{ route('admin.notifications.store') }}" method="POST" id="createNotificationForm" enctype="multipart/form-data" novalidate>
+    <form action="{{ route('admin.notifications.update', $campaign->id) }}" method="POST" id="editNotificationForm" enctype="multipart/form-data" novalidate>
         @csrf
-        <input type="hidden" name="status" id="campaignStatusInput" value="draft">
-        <input type="hidden" name="audience_type" id="selectedAudienceTypeInput" value="individual">
-        <input type="hidden" name="audience_label" id="selectedAudienceLabelInput" value="Individual Devices">
-        <input type="hidden" name="total_audience" id="hiddenTotalAudience" value="{{ count($devices) > 0 ? min(3, count($devices)) : 0 }}">
-        <input type="hidden" name="android_count" id="hiddenAndroidCount" value="2">
-        <input type="hidden" name="ios_count" id="hiddenIosCount" value="1">
-        <input type="hidden" name="delivery_schedule_mode" id="selectedScheduleModeInput" value="schedule">
+        @method('PUT')
+        <input type="hidden" name="status" id="campaignStatusInput" value="{{ $campaign->status ?? 'draft' }}">
+        <input type="hidden" name="audience_type" id="selectedAudienceTypeInput" value="{{ $campaign->audience_type ?? 'individual' }}">
+        <input type="hidden" name="audience_label" id="selectedAudienceLabelInput" value="{{ $campaign->audience_label ?? 'Individual Devices' }}">
+        <input type="hidden" name="total_audience" id="hiddenTotalAudience" value="{{ $campaign->total_audience ?? 3 }}">
+        <input type="hidden" name="android_count" id="hiddenAndroidCount" value="{{ $campaign->android_count ?? 2 }}">
+        <input type="hidden" name="ios_count" id="hiddenIosCount" value="{{ $campaign->ios_count ?? 1 }}">
+        <input type="hidden" name="delivery_schedule_mode" id="selectedScheduleModeInput" value="{{ $campaign->status === 'sent' ? 'now' : 'schedule' }}">
+        <input type="hidden" name="remove_image" id="hiddenRemoveImage" value="0">
 
         {{-- 1. Top Header Bar --}}
         <div class="wizard-header-row">
             <div class="header-left-group">
-                <a href="{{ route('admin.notifications.index') }}" class="btn-back-link" title="Back to Notifications">
+                <a href="{{ route('admin.notifications.show', $campaign->id) }}" class="btn-back-link" title="Back to Notification Details">
                     <i class="fa-solid fa-arrow-left"></i>
                 </a>
                 <div>
-                    <h1 class="wizard-main-title" id="wizardHeaderTitle">Create Notification</h1>
-                    <p class="wizard-subtitle" id="wizardHeaderSubtitle">Compose and deliver a targeted Firebase push notification</p>
+                    <h1 class="wizard-main-title" id="wizardHeaderTitle">Edit Notification</h1>
+                    <p class="wizard-subtitle" id="wizardHeaderSubtitle">Update and adjust push notification settings and delivery details</p>
                 </div>
             </div>
             <div class="header-right-actions">
-                <a href="{{ route('admin.notifications.index') }}" class="btn btn-outline-secondary btn-sm" id="topCancelLink" style="display: none;">
+                <a href="{{ route('admin.notifications.show', $campaign->id) }}" class="btn btn-outline-secondary btn-sm" id="topCancelLink" style="display: none;">
                     Cancel
                 </a>
                 <button type="button" class="btn btn-outline-secondary btn-sm" id="topSaveDraftBtn" onclick="saveAsDraft()">
@@ -45,7 +53,7 @@
                     Send Test
                 </button>
                 <button type="button" class="btn btn-primary btn-sm" id="topActionBtn" onclick="nextWizardStep()">
-                    Review & Send
+                    Review & Save
                 </button>
             </div>
         </div>
@@ -77,7 +85,7 @@
                 {{-- Step 4 --}}
                 <div class="stepper-step" id="stepNode4" onclick="goToStep(4)">
                     <div class="step-circle" id="stepCircle4">4</div>
-                    <span class="step-label" id="stepLabel4">Review & Send</span>
+                    <span class="step-label" id="stepLabel4">Review & Save</span>
                 </div>
             </div>
         </div>
@@ -97,15 +105,15 @@
                         <div class="row g-2 mb-3">
                             <div class="col-md-6">
                                 <label class="form-label text-dark fs-12 mb-1" for="inputCampaignName">Campaign Name <span class="text-danger">*</span></label>
-                                <input type="text" name="name" id="inputCampaignName" class="form-control form-control-sm" placeholder="e.g. GPS Camera Feature Update" value="GPS Camera Feature Update" oninput="clearValidation(this); syncAllWizardFields()">
+                                <input type="text" name="name" id="inputCampaignName" class="form-control form-control-sm" placeholder="e.g. GPS Camera Feature Update" value="{{ old('name', $campaign->name) }}" oninput="clearValidation(this); syncAllWizardFields()">
                                 <div class="invalid-feedback">Campaign name is required.</div>
                             </div>
                             <div class="col-md-6">
                                 <div class="d-flex align-items-center justify-content-between mb-1">
                                     <label class="form-label text-dark fs-12 mb-0" for="inputNotificationTitle">Notification Title <span class="text-danger">*</span></label>
-                                    <span class="char-counter-text" id="titleCharCount">17 / 100</span>
+                                    <span class="char-counter-text" id="titleCharCount">{{ strlen($campaign->title ?? '') }} / 100</span>
                                 </div>
-                                <input type="text" name="title" id="inputNotificationTitle" class="form-control form-control-sm" maxlength="100" placeholder="Notification Title" value="GPS Camera Update" oninput="clearValidation(this); updateLivePreview()">
+                                <input type="text" name="title" id="inputNotificationTitle" class="form-control form-control-sm" maxlength="100" placeholder="Notification Title" value="{{ old('title', $campaign->title) }}" oninput="clearValidation(this); updateLivePreview()">
                                 <div class="invalid-feedback">Notification title is required.</div>
                             </div>
                         </div>
@@ -115,25 +123,25 @@
                             <div class="col-md-6">
                                 <div class="d-flex align-items-center justify-content-between mb-1">
                                     <label class="form-label text-dark fs-12 mb-0" for="inputNotificationMessage">Message <span class="text-danger">*</span></label>
-                                    <span class="char-counter-text" id="msgCharCount">89 / 200</span>
+                                    <span class="char-counter-text" id="msgCharCount">{{ strlen($campaign->message ?? '') }} / 200</span>
                                 </div>
-                                <textarea name="message" id="inputNotificationMessage" class="form-control form-control-sm notif-message-textarea" maxlength="200" placeholder="Type notification body..." oninput="clearValidation(this); updateLivePreview()">New GPS Camera features are now available. Explore improved location stamps and better performance.</textarea>
+                                <textarea name="message" id="inputNotificationMessage" class="form-control form-control-sm notif-message-textarea" maxlength="200" placeholder="Type notification body..." oninput="clearValidation(this); updateLivePreview()">{{ old('message', $campaign->message) }}</textarea>
                                 <div class="invalid-feedback">Message is required.</div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-dark fs-12 mb-1">Notification Image <span class="text-muted">(Optional • Max 2 MB)</span></label>
                                 <div class="image-upload-dropzone position-relative" id="dropzoneContainer" onclick="handleDropzoneClick(event)">
-                                    <div id="dropzoneEmptyState">
+                                    <div id="dropzoneEmptyState" class="{{ $campaign->image_url ? 'd-none' : '' }}">
                                         <i class="fa-solid fa-arrow-up-from-bracket dropzone-icon"></i>
                                         <div class="dropzone-title">Upload PNG or JPG</div>
                                         <div class="dropzone-sub">Max 2 MB • Recommended 1200 × 628 px</div>
                                     </div>
-                                    <div id="dropzonePreviewState" class="dropzone-preview-wrap d-none">
+                                    <div id="dropzonePreviewState" class="dropzone-preview-wrap {{ $campaign->image_url ? '' : 'd-none' }}">
                                         <div class="d-flex align-items-center gap-2 overflow-hidden">
-                                            <img id="dropzoneThumb" src="" alt="Thumbnail" style="width: 44px; height: 44px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1;">
+                                            <img id="dropzoneThumb" src="{{ $campaign->image_url ?: '' }}" alt="Thumbnail" style="width: 44px; height: 44px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1;">
                                             <div class="text-start overflow-hidden">
-                                                <div class="fs-12 fw-bold text-dark text-truncate" id="dropzoneFileName" style="max-width: 140px;">image.png</div>
-                                                <div class="fs-10 text-muted" id="dropzoneFileSize">1.2 MB</div>
+                                                <div class="fs-12 fw-bold text-dark text-truncate" id="dropzoneFileName" style="max-width: 140px;">{{ $campaign->image_url ? basename($campaign->image_url) : 'image.png' }}</div>
+                                                <div class="fs-10 text-muted" id="dropzoneFileSize">{{ $campaign->image_url ? 'Attached Image' : '1.2 MB' }}</div>
                                             </div>
                                         </div>
                                         <button type="button" class="btn btn-sm btn-outline-danger p-1 px-2 fs-11" id="btnRemoveImage" onclick="removeSelectedImage(event)" title="Remove image">
@@ -151,18 +159,18 @@
                             <div class="col-md-6">
                                 <label class="form-label text-dark fs-12 mb-1" for="inputAction">On Tap Action</label>
                                 <select name="action" id="inputAction" class="form-select form-select-sm" onchange="syncAllWizardFields()">
-                                    <option value="open_app" selected>Open App</option>
-                                    <option value="deep_link">Deep Link</option>
-                                    <option value="open_url">Open URL</option>
+                                    <option value="open_app" {{ ($campaign->action ?? 'open_app') === 'open_app' ? 'selected' : '' }}>Open App</option>
+                                    <option value="deep_link" {{ ($campaign->action ?? '') === 'deep_link' ? 'selected' : '' }}>Deep Link</option>
+                                    <option value="open_url" {{ ($campaign->action ?? '') === 'open_url' ? 'selected' : '' }}>Open URL</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-dark fs-12 mb-1">Deep Link <span class="text-muted">(Optional)</span></label>
                                 <select name="deep_link" class="form-select form-select-sm">
-                                    <option value="dashboard" selected>Dashboard</option>
-                                    <option value="camera_preview">Camera Preview</option>
-                                    <option value="stamp_settings">Stamp Settings</option>
-                                    <option value="location_map">Location Map</option>
+                                    <option value="dashboard" {{ ($campaign->action_url ?? 'dashboard') === 'dashboard' ? 'selected' : '' }}>Dashboard</option>
+                                    <option value="camera_preview" {{ ($campaign->action_url ?? '') === 'camera_preview' ? 'selected' : '' }}>Camera Preview</option>
+                                    <option value="stamp_settings" {{ ($campaign->action_url ?? '') === 'stamp_settings' ? 'selected' : '' }}>Stamp Settings</option>
+                                    <option value="location_map" {{ ($campaign->action_url ?? '') === 'location_map' ? 'selected' : '' }}>Location Map</option>
                                 </select>
                             </div>
                         </div>
@@ -183,7 +191,7 @@
                                     <div id="collapsePayload" class="accordion-collapse collapse">
                                         <div class="accordion-body px-0 py-2">
                                             <div class="fs-11 text-muted mb-1">Custom key-value parameters sent silently to the app for deep-linking, background triggers or in-app routing.</div>
-                                            <textarea name="custom_payload" rows="2" class="form-control form-control-sm font-monospace payload-textarea fs-11" placeholder='{"screen": "camera_settings", "promo_id": "AUG2026"}'></textarea>
+                                            <textarea name="custom_payload" rows="2" class="form-control form-control-sm font-monospace payload-textarea fs-11" placeholder='{"screen": "camera_settings", "promo_id": "AUG2026"}'>{{ old('custom_payload', $campaign->custom_payload) }}</textarea>
                                         </div>
                                     </div>
                                 </div>
@@ -223,10 +231,10 @@
                                     <span class="app-name">GPS Camera</span>
                                     <span class="notif-time">Now</span>
                                 </div>
-                                <div class="notif-card-title" id="previewCardTitle">GPS Camera Update</div>
-                                <div class="notif-card-body" id="previewCardBody">New GPS Camera features are now available. Explore improved location stamps and better performance.</div>
-                                <div id="previewCardImageWrap" class="notif-card-banner d-none mt-2">
-                                    <img id="previewCardImgElem" src="" alt="Notification banner" class="img-fluid rounded-2" style="max-height: 120px; width: 100%; object-fit: cover;">
+                                <div class="notif-card-title" id="previewCardTitle">{{ $campaign->title ?: 'GPS Camera Update' }}</div>
+                                <div class="notif-card-body" id="previewCardBody">{{ $campaign->message ?: 'Notification message...' }}</div>
+                                <div id="previewCardImageWrap" class="notif-card-banner {{ $campaign->image_url ? '' : 'd-none' }} mt-2">
+                                    <img id="previewCardImgElem" src="{{ $campaign->image_url ?: '' }}" alt="Notification banner" class="img-fluid rounded-2" style="max-height: 120px; width: 100%; object-fit: cover;">
                                 </div>
                             </div>
                         </div>
@@ -253,7 +261,7 @@
                         </div>
                         <div class="alert-blue-light mb-0 mt-2">
                             <i class="fa-solid fa-circle-info"></i>
-                            <span>You can review all settings before sending.</span>
+                            <span>You can review all settings before saving.</span>
                         </div>
                     </div>
                 </div>
@@ -273,10 +281,10 @@
                         <div class="card-section-subtitle">Choose one audience type.</div>
 
                         {{-- Option 1: All Eligible Installations --}}
-                        <div class="audience-option-card" id="cardAudienceAll" onclick="selectAudienceMode('all')">
+                        <div class="audience-option-card {{ ($campaign->audience_type ?? '') === 'all' ? 'selected' : '' }}" id="cardAudienceAll" onclick="selectAudienceMode('all')">
                             <div class="option-card-left">
                                 <div class="form-check m-0">
-                                    <input class="form-check-input" type="radio" name="audience_choice" id="radioAudienceAll" value="all">
+                                    <input class="form-check-input" type="radio" name="audience_choice" id="radioAudienceAll" value="all" {{ ($campaign->audience_type ?? '') === 'all' ? 'checked' : '' }}>
                                 </div>
                                 <div class="option-icon-square blue">
                                     <i class="fa-solid fa-globe"></i>
@@ -286,14 +294,14 @@
                                     <div class="option-desc">Send to every active device with notification permission</div>
                                 </div>
                             </div>
-                            <div class="option-count-badge" id="badgeAllCount">{{ number_format($audienceMetrics['all']['deliverable']) }}</div>
+                            <div class="option-count-badge" id="badgeAllCount">{{ number_format($audienceMetrics['all']['deliverable'] ?? 7054) }}</div>
                         </div>
 
                         {{-- Option 2: Audience Segment --}}
-                        <div class="audience-option-card" id="cardAudienceSegment" onclick="selectAudienceMode('segment')">
+                        <div class="audience-option-card {{ ($campaign->audience_type ?? '') === 'segment' ? 'selected' : '' }}" id="cardAudienceSegment" onclick="selectAudienceMode('segment')">
                             <div class="option-card-left">
                                 <div class="form-check m-0">
-                                    <input class="form-check-input" type="radio" name="audience_choice" id="radioAudienceSegment" value="segment">
+                                    <input class="form-check-input" type="radio" name="audience_choice" id="radioAudienceSegment" value="segment" {{ ($campaign->audience_type ?? '') === 'segment' ? 'checked' : '' }}>
                                 </div>
                                 <div class="option-icon-square blue">
                                     <i class="fa-solid fa-users"></i>
@@ -307,10 +315,10 @@
                         </div>
 
                         {{-- Option 3: Location --}}
-                        <div class="audience-option-card" id="cardAudienceLocation" onclick="selectAudienceMode('location')">
+                        <div class="audience-option-card {{ ($campaign->audience_type ?? '') === 'location' ? 'selected' : '' }}" id="cardAudienceLocation" onclick="selectAudienceMode('location')">
                             <div class="option-card-left">
                                 <div class="form-check m-0">
-                                    <input class="form-check-input" type="radio" name="audience_choice" id="radioAudienceLocation" value="location">
+                                    <input class="form-check-input" type="radio" name="audience_choice" id="radioAudienceLocation" value="location" {{ ($campaign->audience_type ?? '') === 'location' ? 'checked' : '' }}>
                                 </div>
                                 <div class="option-icon-square blue">
                                     <i class="fa-solid fa-location-dot"></i>
@@ -324,10 +332,10 @@
                         </div>
 
                         {{-- Option 4: Individual Devices (Default) --}}
-                        <div class="audience-option-card selected" id="cardAudienceIndividual" onclick="selectAudienceMode('individual')">
+                        <div class="audience-option-card {{ (!in_array($campaign->audience_type ?? 'individual', ['all', 'segment', 'location'])) ? 'selected' : '' }}" id="cardAudienceIndividual" onclick="selectAudienceMode('individual')">
                             <div class="option-card-left">
                                 <div class="form-check m-0">
-                                    <input class="form-check-input" type="radio" name="audience_choice" id="radioAudienceIndividual" value="individual" checked>
+                                    <input class="form-check-input" type="radio" name="audience_choice" id="radioAudienceIndividual" value="individual" {{ (!in_array($campaign->audience_type ?? 'individual', ['all', 'segment', 'location'])) ? 'checked' : '' }}>
                                 </div>
                                 <div class="option-icon-square blue">
                                     <i class="fa-solid fa-mobile-screen"></i>
@@ -337,23 +345,23 @@
                                     <div class="option-desc">Select specific installations</div>
                                 </div>
                             </div>
-                            <div class="option-count-badge" id="badgeIndividualCount">3</div>
+                            <div class="option-count-badge" id="badgeIndividualCount">{{ $campaign->total_audience ?? 3 }}</div>
                         </div>
 
                         {{-- ============================================================== --}}
                         {{-- DYNAMIC SUB-PANEL 1: Audience Segment Sub-Panel --}}
                         {{-- ============================================================== --}}
-                        <div class="audience-subpanel-card mt-3 d-none" id="subpanelSegment">
+                        <div class="audience-subpanel-card mt-3 {{ ($campaign->audience_type ?? '') === 'segment' ? '' : 'd-none' }}" id="subpanelSegment">
                             <label class="form-label text-dark fs-12 mb-1" for="segmentSelectDropdown">Audience Segment</label>
                             <select name="segment_select_id" id="segmentSelectDropdown" class="form-select form-select-sm mb-3" onchange="onSegmentDropdownChange(this.value)">
                                 @forelse($segments as $seg)
-                                    <option value="{{ $seg->id }}" {{ $loop->first ? 'selected' : '' }}>{{ $seg->name }}</option>
+                                    <option value="{{ $seg->id }}" {{ ($campaign->segment_id == $seg->id || ($loop->first && !$campaign->segment_id)) ? 'selected' : '' }}>{{ $seg->name }}</option>
                                 @empty
                                     <option value="1">Active Users – Tirunelveli</option>
                                 @endforelse
                             </select>
 
-                            <div class="subpanel-header-title" id="segSubpanelTitle">{{ $segments->first()?->name ?? 'Active Users – Tirunelveli' }}</div>
+                            <div class="subpanel-header-title" id="segSubpanelTitle">{{ $campaign->segment?->name ?? ($segments->first()?->name ?? 'Active Users – Tirunelveli') }}</div>
                             <div class="meta-tags-row" id="segSubpanelTags">
                                 <span class="tag-pill"><i class="fa-solid fa-location-dot text-primary"></i> <span id="segTagCity">Tirunelveli</span></span>
                                 <span class="tag-pill green"><i class="fa-solid fa-circle fs-6"></i> Active</span>
@@ -365,15 +373,15 @@
 
                             <div class="three-stat-columns">
                                 <div class="stat-col">
-                                    <div class="stat-col-val" id="segStatAudienceSize">{{ number_format($segments->first()?->audience_size ?? 7054) }}</div>
+                                    <div class="stat-col-val" id="segStatAudienceSize">{{ number_format($campaign->segment?->audience_size ?? ($segments->first()?->audience_size ?? 7054)) }}</div>
                                     <div class="stat-col-lbl">Devices</div>
                                 </div>
                                 <div class="stat-col">
-                                    <div class="stat-col-val text-success" id="segStatDeliverable">{{ number_format($segments->first()?->deliverable_count ?? 6842) }}</div>
+                                    <div class="stat-col-val text-success" id="segStatDeliverable">{{ number_format($campaign->segment?->deliverable_count ?? ($segments->first()?->deliverable_count ?? 6842)) }}</div>
                                     <div class="stat-col-lbl">Deliverable</div>
                                 </div>
                                 <div class="stat-col">
-                                    <div class="stat-col-val text-muted" id="segStatExcluded">{{ number_format($segments->first()?->excluded_count ?? 212) }}</div>
+                                    <div class="stat-col-val text-muted" id="segStatExcluded">{{ number_format($campaign->segment?->excluded_count ?? ($segments->first()?->excluded_count ?? 212)) }}</div>
                                     <div class="stat-col-lbl">Excluded</div>
                                 </div>
                             </div>
@@ -382,7 +390,7 @@
                         {{-- ============================================================== --}}
                         {{-- DYNAMIC SUB-PANEL 2: Location Sub-Panel --}}
                         {{-- ============================================================== --}}
-                        <div class="audience-subpanel-card mt-3 d-none" id="subpanelLocation">
+                        <div class="audience-subpanel-card mt-3 {{ ($campaign->audience_type ?? '') === 'location' ? '' : 'd-none' }}" id="subpanelLocation">
                             <div class="subpanel-header-title mb-2">Select Location</div>
                             <div class="row g-2 mb-3">
                                 <div class="col-4">
@@ -423,147 +431,82 @@
                                 </div>
                             </div>
 
-                            <div class="p-3 bg-white border rounded-2 mb-3">
-                                <div class="d-flex align-items-center justify-content-between mb-2">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="modal-icon-header-circle icon-blue" style="width: 28px; height: 28px; font-size: 11px;">
-                                            <i class="fa-solid fa-location-dot"></i>
-                                        </div>
-                                        <div>
-                                            <div class="fs-12 fw-bold text-dark" id="locDisplayCity">{{ $locations->first()?->city ?? 'Tirunelveli' }}</div>
-                                            <div class="fs-11 text-muted" id="locDisplayRegion">{{ $locations->first()?->state ?? 'Tamil Nadu' }}, {{ $locations->first()?->country ?? 'India' }}</div>
-                                        </div>
-                                    </div>
-                                    <a href="javascript:void(0)" class="fs-11 fw-semibold text-primary text-decoration-none">Change Location</a>
-                                </div>
-                                <div class="d-flex align-items-center gap-2 mb-3">
-                                    <span class="tag-pill blue">City-level targeting</span>
-                                    <span class="tag-pill green">Location data available</span>
-                                </div>
-                                <div class="three-stat-columns">
-                                    <div class="stat-col">
-                                        <div class="stat-col-val" id="locStatDevices">{{ number_format($locations->first()?->total_installations ?? 6488) }}</div>
-                                        <div class="stat-col-lbl">Devices</div>
-                                    </div>
-                                    <div class="stat-col">
-                                        <div class="stat-col-val text-success" id="locStatDeliverable">{{ number_format($locations->first()?->active_devices ?? 6292) }}</div>
-                                        <div class="stat-col-lbl">Deliverable</div>
-                                    </div>
-                                    <div class="stat-col">
-                                        <div class="stat-col-val text-muted" id="locStatExcluded">{{ number_format(max(0, ($locations->first()?->total_installations ?? 6488) - ($locations->first()?->active_devices ?? 6292))) }}</div>
-                                        <div class="stat-col-lbl">Excluded</div>
-                                    </div>
-                                </div>
+                            <div class="subpanel-header-title" id="locDisplayCity">{{ $locations->first()?->city ?? 'Tirunelveli' }}</div>
+                            <div class="meta-tags-row">
+                                <span class="tag-pill"><i class="fa-solid fa-map-pin text-primary"></i> <span id="locDisplayRegion">{{ $locations->first()?->state ?? 'Tamil Nadu' }}, India</span></span>
+                                <span class="tag-pill green"><i class="fa-solid fa-circle fs-6"></i> High Density</span>
                             </div>
-                        </div>
 
-                        {{-- ============================================================== --}}
-                        {{-- DYNAMIC SUB-PANEL 3: All Eligible Installations --}}
-                        {{-- ============================================================== --}}
-                        <div class="audience-subpanel-card mt-3 d-none" id="subpanelAll">
-                            <div class="subpanel-header-title">All Eligible Installations</div>
-                            <div class="fs-11 text-muted mb-3">Every active installation that can receive push notifications</div>
-
-                            <div class="three-stat-columns mb-3">
+                            <div class="three-stat-columns">
                                 <div class="stat-col">
-                                    <div class="stat-col-val">{{ number_format($audienceMetrics['all']['total']) }}</div>
-                                    <div class="stat-col-lbl">Total Installations</div>
+                                    <div class="stat-col-val" id="locStatDevices">{{ number_format($locations->first()?->total_installations ?? 6488) }}</div>
+                                    <div class="stat-col-lbl">Installations</div>
                                 </div>
                                 <div class="stat-col">
-                                    <div class="stat-col-val text-success">{{ number_format($audienceMetrics['all']['deliverable']) }}</div>
-                                    <div class="stat-col-lbl">Eligible</div>
+                                    <div class="stat-col-val text-success" id="locStatDeliverable">{{ number_format($locations->first()?->active_devices ?? 6292) }}</div>
+                                    <div class="stat-col-lbl">Deliverable</div>
                                 </div>
                                 <div class="stat-col">
-                                    <div class="stat-col-val text-muted">{{ number_format($audienceMetrics['all']['excluded']) }}</div>
+                                    <div class="stat-col-val text-muted" id="locStatExcluded">{{ number_format(max(0, ($locations->first()?->total_installations ?? 6488) - ($locations->first()?->active_devices ?? 6292))) }}</div>
                                     <div class="stat-col-lbl">Excluded</div>
                                 </div>
                             </div>
-
-                            <div class="fs-11 fw-bold text-dark mb-1">Included devices</div>
-                            <div class="d-flex align-items-center gap-2 flex-wrap mb-3">
-                                <span class="tag-pill green"><i class="fa-solid fa-check fs-8"></i> Active installations</span>
-                                <span class="tag-pill green"><i class="fa-solid fa-check fs-8"></i> Notification permission enabled</span>
-                                <span class="tag-pill green"><i class="fa-solid fa-check fs-8"></i> Valid FCM token</span>
-                            </div>
-
-                            <div class="alert-blue-light mb-0">
-                                <i class="fa-solid fa-circle-info"></i>
-                                <span>New eligible installations will be included automatically before delivery.</span>
-                            </div>
                         </div>
 
                         {{-- ============================================================== --}}
-                        {{-- DYNAMIC SUB-PANEL 4: Individual Devices Sub-Panel (Scrollable Container) --}}
+                        {{-- DYNAMIC SUB-PANEL 3: Individual Devices Selection Table --}}
                         {{-- ============================================================== --}}
-                        <div class="audience-subpanel-card mt-3" id="subpanelIndividual">
-                            <div class="subpanel-header-title">Select Individual Devices</div>
-                            <div class="fs-11 text-muted mb-2">Search and select specific app installations</div>
-
-                            {{-- Search and platform toolbar --}}
-                            <div class="d-flex align-items-center gap-2 mb-3">
-                                <div class="position-relative flex-grow-1">
-                                    <i class="fa-solid fa-magnifying-glass position-absolute text-muted fs-11 filter-search-icon" style="left: 9px; top: 50%; transform: translateY(-50%);"></i>
-                                    <input type="text" id="individualDeviceSearch" class="form-control form-control-sm ps-4" placeholder="Search by Installation ID, device model or location" onkeyup="filterDeviceTable()">
-                                </div>
-                                <select class="form-select form-select-sm" style="width: 130px;" onchange="filterDevicePlatform(this.value)">
-                                    <option value="All" selected>All Platforms</option>
-                                    <option value="Android">Android</option>
-                                    <option value="iOS">iOS</option>
-                                </select>
+                        <div class="audience-subpanel-card mt-3 {{ (!in_array($campaign->audience_type ?? 'individual', ['all', 'segment', 'location'])) ? '' : 'd-none' }}" id="subpanelIndividual">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div class="subpanel-header-title mb-0">Select Target Devices</div>
+                                <span class="fs-11 text-muted">Checked devices will receive this push notification</span>
                             </div>
 
-                            {{-- Scrollable Device table container --}}
-                            <div class="devices-table-scroll-wrap mb-2" id="deviceTableWrap">
-                                <table class="mini-devices-table" id="deviceSelectTable">
-                                    <thead>
+                            @php
+                                $existingTargetIds = (array) ($campaign->target_device_ids ?? []);
+                            @endphp
+
+                            <div class="table-responsive border rounded-2 mb-2 bg-white" id="deviceTableWrap" style="max-height: 260px; overflow-y: auto;">
+                                <table class="table table-hover table-sm align-middle mb-0 fs-12">
+                                    <thead class="table-light sticky-top">
                                         <tr>
-                                            <th style="width: 36px; text-align: center;">
-                                                <input type="checkbox" class="form-check-input" id="checkAllDevices" checked onchange="toggleAllDevices(this)">
+                                            <th style="width: 36px;" class="text-center">
+                                                <input class="form-check-input" type="checkbox" id="selectAllDevicesCheck" onchange="toggleAllDevices(this)">
                                             </th>
-                                            <th>Device</th>
-                                            <th>Installation ID</th>
+                                            <th>Device ID</th>
                                             <th>Platform</th>
                                             <th>Location</th>
                                             <th>Last Active</th>
-                                            <th>Status</th>
+                                            <th>Perm</th>
+                                            <th>FCM</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        @forelse($devices as $dev)
+                                    <tbody id="deviceTableBody">
+                                        @forelse($devices as $idx => $dev)
                                             @php
-                                                $isEligible = ($dev->is_active && in_array(strtolower($dev->notification_status), ['enabled', 'granted', 'active']) && !empty($dev->fcm_token));
-                                                $brand = trim($dev->device_brand ?? '');
-                                                $model = trim($dev->device_model ?? '');
-                                                if (empty($brand) && empty($model)) {
-                                                    $devName = 'Device';
-                                                } elseif (!empty($brand) && stripos($model, $brand) === 0) {
-                                                    $devName = $model;
-                                                } else {
-                                                    $devName = trim($brand . ' ' . $model);
-                                                }
-                                                $isDefaultSelected = $loop->index < 3;
+                                                $isTargeted = !empty($existingTargetIds) 
+                                                    ? in_array($dev->device_id, $existingTargetIds) 
+                                                    : ($idx < 3);
                                             @endphp
-                                            <tr class="device-row" data-platform="{{ $dev->platform }}">
-                                                <td style="text-align: center;">
-                                                    <input type="checkbox" name="target_device_ids[]" value="{{ $dev->installation_id }}" class="form-check-input individual-device-check" data-platform="{{ $dev->platform }}" data-eligible="{{ $isEligible ? '1' : '0' }}" {{ $isDefaultSelected ? 'checked' : '' }} onchange="clearValidation(document.getElementById('deviceTableWrap')); updateIndividualSelection()">
+                                            <tr>
+                                                <td class="text-center">
+                                                    <input class="form-check-input individual-device-check" type="checkbox" name="target_device_ids[]" value="{{ $dev->device_id }}" data-platform="{{ $dev->platform }}" {{ $isTargeted ? 'checked' : '' }} onchange="onDeviceCheckChange()">
                                                 </td>
-                                                <td class="device-model-name">{{ $devName }}</td>
-                                                <td class="install-id-code">{{ $dev->installation_id }}</td>
+                                                <td><span class="font-monospace text-dark fw-bold">{{ $dev->device_id }}</span></td>
                                                 <td>
-                                                    @if(strcasecmp($dev->platform, 'iOS') === 0)
+                                                    @if(strtolower($dev->platform) === 'ios')
                                                         <i class="fa-brands fa-apple text-dark me-1"></i> iOS
                                                     @else
                                                         <i class="fa-brands fa-android text-success me-1"></i> Android
                                                     @endif
                                                 </td>
-                                                <td>{{ $dev->city ?: 'Unknown' }}</td>
-                                                <td class="text-muted">{{ $dev->last_active_human ?: '2 min ago' }}</td>
+                                                <td>{{ $dev->location ? ($dev->location->city . ', ' . $dev->location->country) : 'Tirunelveli, India' }}</td>
+                                                <td><span class="text-muted fs-11">{{ $dev->last_active_at ? $dev->last_active_at->diffForHumans() : 'Just now' }}</span></td>
                                                 <td>
-                                                    @if($isEligible)
-                                                        <span class="badge bg-success-subtle text-success border border-success-subtle">Eligible</span>
-                                                    @else
-                                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Ineligible</span>
-                                                    @endif
+                                                    <span class="badge bg-success-subtle text-success fs-10 fw-normal">Granted</span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-primary-subtle text-primary fs-10 fw-normal">Active</span>
                                                 </td>
                                             </tr>
                                         @empty
@@ -577,7 +520,7 @@
                             <div class="invalid-feedback d-none mb-2" id="deviceSelectionError">Please select at least one device to target.</div>
 
                             <div class="d-flex align-items-center justify-content-between fs-11">
-                                <span class="fw-bold text-dark" id="deviceSelectedCountLabel">3 devices selected</span>
+                                <span class="fw-bold text-dark" id="deviceSelectedCountLabel">{{ $campaign->total_audience ?? 3 }} devices selected</span>
                                 <a href="javascript:void(0)" class="text-primary fw-semibold text-decoration-none" onclick="clearDeviceSelection()">Clear selection</a>
                             </div>
                         </div>
@@ -619,7 +562,7 @@
                     <div class="estimated-audience-card">
                         <div class="fs-12 fw-bold text-dark mb-1">Estimated Audience</div>
 
-                        <div class="est-hero-number" id="step2HeroCount">3</div>
+                        <div class="est-hero-number" id="step2HeroCount">{{ $campaign->total_audience ?? 3 }}</div>
                         <div class="est-hero-sub">Deliverable devices</div>
 
                         <div class="donut-chart-row">
@@ -645,7 +588,7 @@
                         <div class="spec-summary-list">
                             <div class="spec-item">
                                 <span class="spec-lbl" id="specRow1Label">Selected Devices</span>
-                                <span class="spec-val" id="specRow1Val">3</span>
+                                <span class="spec-val" id="specRow1Val">{{ $campaign->total_audience ?? 3 }}</span>
                             </div>
                             <div class="spec-item">
                                 <span class="spec-lbl">Excluded</span>
@@ -653,7 +596,7 @@
                             </div>
                             <div class="spec-item">
                                 <span class="spec-lbl">Estimated Delivery</span>
-                                <span class="spec-val fw-bold" id="specRow3Val">3</span>
+                                <span class="spec-val fw-bold" id="specRow3Val">{{ $campaign->total_audience ?? 3 }}</span>
                             </div>
                         </div>
                     </div>
@@ -665,17 +608,17 @@
                         <div class="spec-summary-list border-0 pt-0">
                             <div class="spec-item py-1">
                                 <span class="spec-lbl"><i class="fa-solid fa-bullhorn text-muted me-1"></i> Type</span>
-                                <span class="spec-val" id="summaryTypeVal">Individual Devices</span>
+                                <span class="spec-val" id="summaryTypeVal">{{ $campaign->audience_label ?? 'Individual Devices' }}</span>
                             </div>
-                            <div class="spec-item py-1" id="summarySegmentRow" style="display: none;">
+                            <div class="spec-item py-1" id="summarySegmentRow" style="display: {{ ($campaign->audience_type ?? '') === 'segment' ? 'flex' : 'none' }};">
                                 <span class="spec-lbl"><i class="fa-solid fa-users text-muted me-1"></i> Segment</span>
-                                <span class="spec-val" id="summarySegmentVal">Active Users – Tirunelveli</span>
+                                <span class="spec-val" id="summarySegmentVal">{{ $campaign->segment?->name ?? 'Active Users – Tirunelveli' }}</span>
                             </div>
-                            <div class="spec-item py-1" id="summarySelectedDevicesRow">
+                            <div class="spec-item py-1" id="summarySelectedDevicesRow" style="display: {{ (!in_array($campaign->audience_type ?? 'individual', ['all', 'segment', 'location'])) ? 'flex' : 'none' }};">
                                 <span class="spec-lbl"><i class="fa-solid fa-mobile-screen text-muted me-1"></i> Selected Devices</span>
-                                <span class="spec-val" id="summarySelectedDevicesVal">3</span>
+                                <span class="spec-val" id="summarySelectedDevicesVal">{{ $campaign->total_audience ?? 3 }}</span>
                             </div>
-                            <div class="spec-item py-1" id="summaryLocationRow" style="display: none;">
+                            <div class="spec-item py-1" id="summaryLocationRow" style="display: {{ ($campaign->audience_type ?? '') === 'location' ? 'flex' : 'none' }};">
                                 <span class="spec-lbl"><i class="fa-solid fa-location-dot text-muted me-1"></i> Location</span>
                                 <span class="spec-val" id="summaryLocationVal">Tirunelveli</span>
                             </div>
@@ -699,7 +642,7 @@
                         <i class="fa-solid fa-circle-check"></i>
                         <div>
                             <div>Audience is ready</div>
-                            <div class="fw-normal fs-11" id="audienceReadyDesc">3 selected devices can receive this notification.</div>
+                            <div class="fw-normal fs-11" id="audienceReadyDesc">{{ $campaign->total_audience ?? 3 }} selected devices can receive this notification.</div>
                         </div>
                     </div>
                 </div>
@@ -719,26 +662,26 @@
                         <div class="card-section-subtitle">Choose when to send this notification.</div>
 
                         {{-- Option 1: Send Now --}}
-                        <div class="audience-option-card" id="cardScheduleNow" onclick="setDeliveryScheduleMode('now')">
+                        <div class="audience-option-card {{ ($campaign->status === 'sent') ? 'selected' : '' }}" id="cardScheduleNow" onclick="setDeliveryScheduleMode('now')">
                             <div class="option-card-left">
                                 <div class="form-check m-0">
-                                    <input class="form-check-input" type="radio" name="schedule_choice" id="radioScheduleNow" value="now">
+                                    <input class="form-check-input" type="radio" name="schedule_choice" id="radioScheduleNow" value="now" {{ ($campaign->status === 'sent') ? 'checked' : '' }}>
                                 </div>
                                 <div class="option-icon-square blue">
                                     <i class="fa-solid fa-bolt"></i>
                                 </div>
                                 <div>
                                     <div class="option-title">Send Now</div>
-                                    <div class="option-desc">Send immediately after final review</div>
+                                    <div class="option-desc">Send immediately after final confirmation</div>
                                 </div>
                             </div>
                         </div>
 
                         {{-- Option 2: Schedule for Later (Default) --}}
-                        <div class="audience-option-card selected" id="cardScheduleLater" onclick="setDeliveryScheduleMode('schedule')">
+                        <div class="audience-option-card {{ ($campaign->status !== 'sent') ? 'selected' : '' }}" id="cardScheduleLater" onclick="setDeliveryScheduleMode('schedule')">
                             <div class="option-card-left">
                                 <div class="form-check m-0">
-                                    <input class="form-check-input" type="radio" name="schedule_choice" id="radioScheduleLater" value="schedule" checked>
+                                    <input class="form-check-input" type="radio" name="schedule_choice" id="radioScheduleLater" value="schedule" {{ ($campaign->status !== 'sent') ? 'checked' : '' }}>
                                 </div>
                                 <div class="option-icon-square blue">
                                     <i class="fa-regular fa-calendar-days"></i>
@@ -751,13 +694,13 @@
                         </div>
 
                         {{-- Sub-Panel A: Schedule Date & Time (When Schedule for Later selected) --}}
-                        <div class="audience-subpanel-card mt-3" id="subpanelScheduleLater">
+                        <div class="audience-subpanel-card mt-3 {{ ($campaign->status === 'sent') ? 'd-none' : '' }}" id="subpanelScheduleLater">
                             <div class="subpanel-header-title mb-2">Schedule Date & Time</div>
                             <div class="row g-2 mb-3">
                                 <div class="col-md-6">
                                     <label class="form-label text-dark fs-11 mb-1" for="inputScheduledDate">Delivery Date <span class="text-danger">*</span></label>
                                     <div class="schedule-input-wrap">
-                                        <input type="text" name="scheduled_date" id="inputScheduledDate" class="form-control schedule-input" value="{{ date('d M Y') }}" placeholder="Select Delivery Date" oninput="clearValidation(this); syncScheduleSummary()" onchange="clearValidation(this); syncScheduleSummary()">
+                                        <input type="text" name="scheduled_date" id="inputScheduledDate" class="form-control schedule-input" value="{{ $localScheduledAt ? $localScheduledAt->format('d M Y') : date('d M Y') }}" placeholder="Select Delivery Date" oninput="clearValidation(this); syncScheduleSummary()" onchange="clearValidation(this); syncScheduleSummary()">
                                         <i class="fa-regular fa-calendar schedule-icon-suffix" id="btnDateCalSuffix" title="Open Calendar"></i>
                                     </div>
                                     <div class="invalid-feedback">Delivery date is required.</div>
@@ -765,7 +708,7 @@
                                 <div class="col-md-6">
                                     <label class="form-label text-dark fs-11 mb-1" for="inputScheduledTime">Delivery Time <span class="text-danger">*</span></label>
                                     <div class="schedule-input-wrap">
-                                        <input type="text" name="scheduled_time" id="inputScheduledTime" class="form-control schedule-input" value="10:30 AM" placeholder="Select Delivery Time" oninput="clearValidation(this); syncScheduleSummary()" onchange="clearValidation(this); syncScheduleSummary()">
+                                        <input type="text" name="scheduled_time" id="inputScheduledTime" class="form-control schedule-input" value="{{ $localScheduledAt ? $localScheduledAt->format('h:i A') : '10:30 AM' }}" placeholder="Select Delivery Time" oninput="clearValidation(this); syncScheduleSummary()" onchange="clearValidation(this); syncScheduleSummary()">
                                         <i class="fa-regular fa-clock schedule-icon-suffix" id="btnTimeClockSuffix" title="Open Time Picker"></i>
                                     </div>
                                     <div class="invalid-feedback">Delivery time is required.</div>
@@ -775,11 +718,11 @@
                             <div class="mb-3">
                                 <label class="form-label text-dark fs-11 mb-1" for="selectScheduleTimeZone">Time Zone</label>
                                 <select name="schedule_time_zone" id="selectScheduleTimeZone" class="form-select form-select-sm" onchange="syncScheduleSummary()">
-                                    <option value="Asia/Kolkata" selected>IST - India Standard Time (Asia/Kolkata, UTC+05:30)</option>
-                                    <option value="Asia/Dubai">GST - Gulf Standard Time (Dubai/UAE, UTC+04:00)</option>
-                                    <option value="UTC">UTC - Universal Coordinated Time (UTC+00:00)</option>
-                                    <option value="America/New_York">EST - Eastern Standard Time (New York, UTC-05:00)</option>
-                                    <option value="America/Los_Angeles">PST - Pacific Standard Time (Los Angeles, UTC-08:00)</option>
+                                    <option value="Asia/Kolkata" {{ ($campaign->time_zone ?? 'Asia/Kolkata') === 'Asia/Kolkata' ? 'selected' : '' }}>IST - India Standard Time (Asia/Kolkata, UTC+05:30)</option>
+                                    <option value="Asia/Dubai" {{ ($campaign->time_zone ?? '') === 'Asia/Dubai' ? 'selected' : '' }}>GST - Gulf Standard Time (Dubai/UAE, UTC+04:00)</option>
+                                    <option value="UTC" {{ ($campaign->time_zone ?? '') === 'UTC' ? 'selected' : '' }}>UTC - Universal Coordinated Time (UTC+00:00)</option>
+                                    <option value="America/New_York" {{ ($campaign->time_zone ?? '') === 'America/New_York' ? 'selected' : '' }}>EST - Eastern Standard Time (New York, UTC-05:00)</option>
+                                    <option value="America/Los_Angeles" {{ ($campaign->time_zone ?? '') === 'America/Los_Angeles' ? 'selected' : '' }}>PST - Pacific Standard Time (Los Angeles, UTC-08:00)</option>
                                 </select>
                             </div>
 
@@ -789,12 +732,12 @@
                             </div>
 
                             <div class="fs-12 fw-bold text-dark" id="scheduledDeliveryNotice">
-                                Scheduled delivery: Wednesday, 26 August 2026 at 10:30 AM IST
+                                Scheduled delivery: {{ $localScheduledAt ? $localScheduledAt->format('l, d F Y \a\t h:i A') . ' ' . ($schedTz === 'Asia/Kolkata' ? 'IST' : $schedTz) : date('l, d F Y') . ' at 10:30 AM IST' }}
                             </div>
                         </div>
 
                         {{-- Sub-Panel B: Immediate Delivery Info (When Send Now selected) --}}
-                        <div class="audience-subpanel-card mt-3 d-none" id="subpanelScheduleNow">
+                        <div class="audience-subpanel-card mt-3 {{ ($campaign->status === 'sent') ? '' : 'd-none' }}" id="subpanelScheduleNow">
                             <div class="subpanel-header-title mb-2">Immediate Delivery</div>
                             <div class="d-flex align-items-start gap-3 p-2 bg-white rounded-2 border mb-3">
                                 <div class="schedule-hero-art-box p-0">
@@ -804,13 +747,13 @@
                                 </div>
                                 <div>
                                     <div class="fs-12 fw-bold text-dark mb-1">Ready to send immediately</div>
-                                    <div class="fs-11 text-muted mb-2">The notification will be queued as soon as you confirm it in Review & Send.</div>
+                                    <div class="fs-11 text-muted mb-2">The notification will be queued as soon as you confirm it in Review & Save.</div>
                                     <div class="alert-blue-light mb-2 py-1">
                                         <i class="fa-solid fa-circle-info"></i>
                                         <span>Delivery usually begins within a few seconds. Actual receipt may depend on device connectivity.</span>
                                     </div>
                                     <div class="fs-12 fw-bold text-primary">
-                                        Estimated delivery: <span class="step3-dynamic-count">3</span> eligible devices
+                                        Estimated delivery: <span class="step3-dynamic-count">{{ $campaign->total_audience ?? 3 }}</span> eligible devices
                                     </div>
                                 </div>
                             </div>
@@ -833,7 +776,7 @@
                                     </div>
                                 </div>
                                 <div class="form-check form-switch m-0">
-                                    <input class="form-check-input" type="checkbox" name="respect_quiet_hours" id="swRespectQuietHours" checked>
+                                    <input class="form-check-input" type="checkbox" name="respect_quiet_hours" id="swRespectQuietHours" {{ $campaign->quiet_hours_enabled ? 'checked' : '' }}>
                                 </div>
                             </div>
 
@@ -858,10 +801,10 @@
                                 <div class="d-flex align-items-center justify-content-between mb-1">
                                     <span class="fs-12 text-dark">Message Expiry</span>
                                     <select name="message_expiry" class="form-select form-select-sm" style="width: 140px;">
-                                        <option value="24" selected>24 hours</option>
-                                        <option value="48">48 hours</option>
-                                        <option value="72">72 hours</option>
-                                        <option value="168">7 days</option>
+                                        <option value="24" {{ ($campaign->expiry_hours ?? 24) == 24 ? 'selected' : '' }}>24 hours</option>
+                                        <option value="48" {{ ($campaign->expiry_hours ?? '') == 48 ? 'selected' : '' }}>48 hours</option>
+                                        <option value="72" {{ ($campaign->expiry_hours ?? '') == 72 ? 'selected' : '' }}>72 hours</option>
+                                        <option value="168" {{ ($campaign->expiry_hours ?? '') == 168 ? 'selected' : '' }}>7 days</option>
                                     </select>
                                 </div>
                                 <div class="fs-11 text-muted">Expired notifications will not be delivered to devices that reconnect later.</div>
@@ -874,10 +817,10 @@
                 <div class="col-lg-5 col-xl-4">
                     {{-- Schedule Summary Card --}}
                     <div class="wizard-card">
-                        <div class="fs-12 fw-bold text-dark mb-2" id="step3SummaryCardTitle">Schedule Summary</div>
+                        <div class="fs-12 fw-bold text-dark mb-2" id="step3SummaryCardTitle">{{ ($campaign->status === 'sent') ? 'Delivery Summary' : 'Schedule Summary' }}</div>
 
                         {{-- Art box (Calendar art vs Lightning Clock art) --}}
-                        <div class="schedule-hero-art-box" id="step3ArtBoxCalendar">
+                        <div class="schedule-hero-art-box {{ ($campaign->status === 'sent') ? 'd-none' : '' }}" id="step3ArtBoxCalendar">
                             <div class="art-calendar-icon">
                                 <div class="cal-header-dots">
                                     <span class="dot-ring"></span>
@@ -895,7 +838,7 @@
                             </div>
                         </div>
 
-                        <div class="schedule-hero-art-box d-none" id="step3ArtBoxLightning">
+                        <div class="schedule-hero-art-box {{ ($campaign->status === 'sent') ? '' : 'd-none' }}" id="step3ArtBoxLightning">
                             <div class="art-circle-icon">
                                 <i class="fa-solid fa-bolt"></i>
                             </div>
@@ -905,23 +848,23 @@
                         <div class="spec-summary-list border-0 pt-0">
                             <div class="spec-item py-1">
                                 <span class="spec-lbl"><i class="fa-regular fa-calendar text-muted me-1"></i> Delivery Type</span>
-                                <span class="spec-val" id="step3DeliveryTypeVal">Scheduled</span>
+                                <span class="spec-val" id="step3DeliveryTypeVal">{{ ($campaign->status === 'sent') ? 'Send Now' : 'Scheduled' }}</span>
                             </div>
-                            <div class="spec-item py-1" id="step3DateRow">
+                            <div class="spec-item py-1" id="step3DateRow" style="display: {{ ($campaign->status === 'sent') ? 'none' : 'flex' }};">
                                 <span class="spec-lbl"><i class="fa-regular fa-calendar-days text-muted me-1"></i> Date</span>
-                                <span class="spec-val" id="step3DateVal">26 Aug 2026</span>
+                                <span class="spec-val" id="step3DateVal">{{ $localScheduledAt ? $localScheduledAt->format('d M Y') : date('d M Y') }}</span>
                             </div>
                             <div class="spec-item py-1" id="step3TimeRow">
-                                <span class="spec-lbl"><i class="fa-regular fa-clock text-muted me-1"></i> Time</span>
-                                <span class="spec-val" id="step3TimeVal">10:30 AM</span>
+                                <span class="spec-lbl"><i class="fa-regular fa-clock text-muted me-1"></i> {{ ($campaign->status === 'sent') ? 'Delivery Time' : 'Time' }}</span>
+                                <span class="spec-val" id="step3TimeVal">{{ ($campaign->status === 'sent') ? 'Immediately' : ($localScheduledAt ? $localScheduledAt->format('h:i A') : '10:30 AM') }}</span>
                             </div>
-                            <div class="spec-item py-1" id="step3TimeZoneRow">
+                            <div class="spec-item py-1" id="step3TimeZoneRow" style="display: {{ ($campaign->status === 'sent') ? 'none' : 'flex' }};">
                                 <span class="spec-lbl"><i class="fa-solid fa-globe text-muted me-1"></i> Time Zone</span>
-                                <span class="spec-val" id="step3TimeZoneVal">Asia/Kolkata</span>
+                                <span class="spec-val" id="step3TimeZoneVal">{{ $campaign->time_zone ?? 'Asia/Kolkata' }}</span>
                             </div>
                             <div class="spec-item py-1">
                                 <span class="spec-lbl"><i class="fa-solid fa-users text-muted me-1"></i> Estimated Delivery</span>
-                                <span class="spec-val" id="step3EstDeliveryVal"><span class="step3-dynamic-count">3</span> devices</span>
+                                <span class="spec-val" id="step3EstDeliveryVal"><span class="step3-dynamic-count">{{ $campaign->total_audience ?? 3 }}</span> devices</span>
                             </div>
                             <div class="spec-item py-1" id="step3PermRow" style="display: none;">
                                 <span class="spec-lbl"><i class="fa-solid fa-shield-check text-muted me-1"></i> Notification Permission</span>
@@ -940,19 +883,19 @@
                         <div class="spec-summary-list border-0 pt-0">
                             <div class="spec-item py-1">
                                 <span class="spec-lbl"><i class="fa-solid fa-bullhorn text-muted me-1"></i> Title</span>
-                                <span class="spec-val" id="step3NotifTitleVal">GPS Camera Update</span>
+                                <span class="spec-val" id="step3NotifTitleVal">{{ $campaign->title ?: 'GPS Camera Update' }}</span>
                             </div>
                             <div class="spec-item py-1">
                                 <span class="spec-lbl"><i class="fa-solid fa-users text-muted me-1"></i> Audience</span>
-                                <span class="spec-val" id="step3NotifAudienceVal">Individual Devices</span>
+                                <span class="spec-val" id="step3NotifAudienceVal">{{ $campaign->audience_label ?? 'Individual Devices' }}</span>
                             </div>
                             <div class="spec-item py-1">
                                 <span class="spec-lbl"><i class="fa-solid fa-mobile-screen text-muted me-1"></i> Selected Devices</span>
-                                <span class="spec-val"><span class="step3-dynamic-count">3</span></span>
+                                <span class="spec-val"><span class="step3-dynamic-count">{{ $campaign->total_audience ?? 3 }}</span></span>
                             </div>
                             <div class="spec-item py-1">
                                 <span class="spec-lbl"><i class="fa-solid fa-mobile-screen-button text-muted me-1"></i> Platforms</span>
-                                <span class="spec-val" id="step3PlatformsVal"><i class="fa-brands fa-android text-success"></i> Android 2 · <i class="fa-brands fa-apple text-dark"></i> iOS 1</span>
+                                <span class="spec-val" id="step3PlatformsVal"><i class="fa-brands fa-android text-success"></i> Android {{ $campaign->android_count ?? 2 }} · <i class="fa-brands fa-apple text-dark"></i> iOS {{ $campaign->ios_count ?? 1 }}</span>
                             </div>
                             <div class="spec-item py-1">
                                 <span class="spec-lbl"><i class="fa-solid fa-circle-check text-muted me-1"></i> Status</span>
@@ -965,8 +908,8 @@
                     <div class="alert-audience-ready" id="step3ReadyAlert">
                         <i class="fa-solid fa-circle-check"></i>
                         <div>
-                            <div id="step3ReadyTitle">Schedule is ready</div>
-                            <div class="fw-normal fs-11" id="step3ReadyDesc">This notification will be sent to 3 devices on 26 Aug 2026 at 10:30 AM IST.</div>
+                            <div id="step3ReadyTitle">{{ ($campaign->status === 'sent') ? 'Ready to send' : 'Schedule is ready' }}</div>
+                            <div class="fw-normal fs-11" id="step3ReadyDesc">{{ ($campaign->status === 'sent') ? 'This notification will be sent to ' . ($campaign->total_audience ?? 3) . ' devices immediately after confirmation.' : 'This notification will be sent to ' . ($campaign->total_audience ?? 3) . ' devices on ' . ($localScheduledAt ? $localScheduledAt->format('d M Y \a\t h:i A') : date('d M Y') . ' at 10:30 AM') . ' ' . ($schedTz === 'Asia/Kolkata' ? 'IST' : $schedTz) . '.' }}</div>
                         </div>
                     </div>
                 </div>
@@ -974,242 +917,245 @@
         </div>
 
         {{-- ====================================================================== --}}
-        {{-- STEP 4: REVIEW & SEND SCREEN --}}
+        {{-- STEP 4: REVIEW & SAVE SCREEN --}}
         {{-- ====================================================================== --}}
         <div class="wizard-step-panel d-none" id="stepPanel4">
             <div class="row g-3">
                 {{-- Left Column: Review Sections --}}
                 <div class="col-lg-7 col-xl-8">
-                    {{-- 1. Notification Content Card --}}
+                    {{-- 1. Campaign Content Review Card --}}
                     <div class="wizard-card">
-                        <div class="d-flex align-items-center justify-content-between mb-3">
-                            <div class="card-section-title mb-0">Notification Content</div>
+                        <div class="review-section-header">
+                            <div class="card-section-title mb-0">1 Campaign Content</div>
                             <a href="javascript:void(0)" class="review-edit-link" onclick="goToStep(1)">
                                 <i class="fa-solid fa-pen fs-10"></i> Edit Content
                             </a>
                         </div>
 
-                        <div class="d-flex align-items-start gap-3">
-                            <div class="review-app-logo-box">
-                                <i class="fa-solid fa-location-dot"></i>
+                        <div class="review-spec-list">
+                            <div class="review-spec-row">
+                                <span class="review-spec-label">Campaign Name</span>
+                                <span class="review-spec-value fw-semibold text-dark" id="revCampaignName">{{ $campaign->name }}</span>
                             </div>
-                            <div class="review-spec-grid flex-grow-1">
-                                <div class="review-spec-row">
-                                    <div class="review-spec-label">Campaign Name</div>
-                                    <div class="review-spec-val" id="revCampaignName">GPS Camera Feature Update</div>
+                            <div class="review-spec-row">
+                                <span class="review-spec-label">Notification Title</span>
+                                <span class="review-spec-value fw-bold text-dark" id="revNotificationTitle">{{ $campaign->title }}</span>
+                            </div>
+                            <div class="review-spec-row">
+                                <span class="review-spec-label">Message Body</span>
+                                <span class="review-spec-value text-muted" id="revNotificationMessage">{{ $campaign->message }}</span>
+                            </div>
+                            <div class="review-spec-row" id="revImageRow" style="display: {{ $campaign->image_url ? 'flex' : 'none' }};">
+                                <span class="review-spec-label">Notification Image</span>
+                                <div class="review-spec-value d-flex align-items-center gap-2">
+                                    <img id="revThumbnailImg" src="{{ $campaign->image_url ?: '' }}" alt="Thumbnail" style="width: 32px; height: 32px; object-fit: cover; border-radius: 4px; border: 1px solid #e2e8f0;">
+                                    <span class="fs-11 text-muted" id="revImageName">{{ $campaign->image_url ? basename($campaign->image_url) : 'image.png' }}</span>
                                 </div>
-                                <div class="review-spec-row">
-                                    <div class="review-spec-label">Notification Title</div>
-                                    <div class="review-spec-val" id="revNotificationTitle">GPS Camera Update</div>
-                                </div>
-                                <div class="review-spec-row">
-                                    <div class="review-spec-label">Message</div>
-                                    <div class="review-spec-val" id="revNotificationMessage">New GPS Camera features are now available. Explore improved location stamps and better performance.</div>
-                                </div>
-                                <div class="review-spec-row">
-                                    <div class="review-spec-label">Action</div>
-                                    <div class="review-spec-val" id="revAction">Open App</div>
-                                </div>
-                                <div class="review-spec-row" id="revImageRow" style="display: none;">
-                                    <div class="review-spec-label">Image</div>
-                                    <div class="review-spec-val" id="revImageVal">
-                                        <img id="revThumbnailImg" src="" style="width: 44px; height: 32px; object-fit: cover; border-radius: 4px; border: 1px solid #e2e8f0;">
-                                        <span id="revImageName" class="ms-1 fs-11 text-muted"></span>
-                                    </div>
-                                </div>
+                            </div>
+                            <div class="review-spec-row">
+                                <span class="review-spec-label">On Tap Action</span>
+                                <span class="review-spec-value" id="revAction">{{ ucfirst(str_replace('_', ' ', $campaign->action ?? 'open_app')) }}</span>
+                            </div>
+                            <div class="review-spec-row">
+                                <span class="review-spec-label">App Target</span>
+                                <span class="review-spec-value">GeoCam (com.geocam.app)</span>
                             </div>
                         </div>
                     </div>
 
-                    {{-- 2. Audience Card --}}
+                    {{-- 2. Target Audience Review Card --}}
                     <div class="wizard-card">
-                        <div class="d-flex align-items-center justify-content-between mb-3">
-                            <div class="card-section-title mb-0">Audience</div>
+                        <div class="review-section-header">
+                            <div class="card-section-title mb-0">2 Target Audience</div>
                             <a href="javascript:void(0)" class="review-edit-link" onclick="goToStep(2)">
                                 <i class="fa-solid fa-pen fs-10"></i> Edit Audience
                             </a>
                         </div>
 
-                        <div class="review-spec-grid">
+                        <div class="review-spec-list">
                             <div class="review-spec-row">
-                                <div class="review-spec-label">Audience Type</div>
-                                <div class="review-spec-val" id="revAudienceType">Individual Devices</div>
+                                <span class="review-spec-label">Audience Type</span>
+                                <span class="review-spec-value fw-semibold" id="revAudienceType">{{ $campaign->audience_label ?? 'Individual Devices' }}</span>
                             </div>
                             <div class="review-spec-row">
-                                <div class="review-spec-label">Selected Devices</div>
-                                <div class="review-spec-val" id="revSelectedCount">3</div>
+                                <span class="review-spec-label">Target Devices</span>
+                                <span class="review-spec-value fw-bold text-primary"><span id="revSelectedCount">{{ $campaign->total_audience ?? 3 }}</span> installations</span>
                             </div>
                             <div class="review-spec-row">
-                                <div class="review-spec-label">Platforms</div>
-                                <div class="review-spec-val" id="revPlatformsVal"><i class="fa-brands fa-android text-success"></i> Android 2 · <i class="fa-brands fa-apple text-dark"></i> iOS 1</div>
+                                <span class="review-spec-label">Platforms</span>
+                                <span class="review-spec-value" id="revPlatformsVal"><i class="fa-brands fa-android text-success"></i> Android {{ $campaign->android_count ?? 2 }} · <i class="fa-brands fa-apple text-dark"></i> iOS {{ $campaign->ios_count ?? 1 }}</span>
                             </div>
                             <div class="review-spec-row">
-                                <div class="review-spec-label">Eligibility</div>
-                                <div class="review-spec-val text-success" id="revEligibility">All 3 devices eligible</div>
+                                <span class="review-spec-label">Eligibility Filter</span>
+                                <span class="review-spec-value text-success" id="revEligibility">All {{ $campaign->total_audience ?? 3 }} devices eligible</span>
                             </div>
-                        </div>
-
-                        {{-- Device ID Pills --}}
-                        <div class="device-id-pills-row" id="revDevicePillsRow">
-                            @foreach($devices->take(3) as $d)
-                                <span class="device-id-pill">{{ $d->installation_id }}</span>
-                            @endforeach
+                            <div class="review-spec-row align-items-start" id="revDevicePillsRow">
+                                <span class="review-spec-label">Target Device IDs</span>
+                                <div class="review-spec-value d-flex flex-wrap gap-1">
+                                    @forelse($existingTargetIds as $devId)
+                                        <span class="device-id-pill">{{ $devId }}</span>
+                                    @empty
+                                        <span class="device-id-pill">DEV-001</span>
+                                        <span class="device-id-pill">DEV-002</span>
+                                        <span class="device-id-pill">DEV-003</span>
+                                    @endforelse
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    {{-- 3. Delivery Card --}}
+                    {{-- 3. Delivery Schedule Review Card --}}
                     <div class="wizard-card">
-                        <div class="d-flex align-items-center justify-content-between mb-3">
-                            <div class="card-section-title mb-0">Delivery</div>
+                        <div class="review-section-header">
+                            <div class="card-section-title mb-0">3 Delivery & Timing</div>
                             <a href="javascript:void(0)" class="review-edit-link" onclick="goToStep(3)">
                                 <i class="fa-solid fa-pen fs-10"></i> Edit Schedule
                             </a>
                         </div>
 
-                        <div class="review-spec-grid">
+                        <div class="review-spec-list">
                             <div class="review-spec-row">
-                                <div class="review-spec-label">Delivery Type</div>
-                                <div class="review-spec-val" id="revDeliveryType">Scheduled <i class="fa-regular fa-calendar text-primary ms-1"></i></div>
+                                <span class="review-spec-label">Delivery Mode</span>
+                                <span class="review-spec-value fw-semibold text-primary" id="revDeliveryType">
+                                    @if($campaign->status === 'sent')
+                                        Send Now
+                                    @else
+                                        Scheduled <i class="fa-regular fa-calendar text-primary ms-1"></i>
+                                    @endif
+                                </span>
                             </div>
-                            <div class="review-spec-row" id="revDateRow">
-                                <div class="review-spec-label">Delivery Date</div>
-                                <div class="review-spec-val" id="revDeliveryDate">26 Aug 2026</div>
+                            <div class="review-spec-row" id="revDateRow" style="display: {{ ($campaign->status === 'sent') ? 'none' : 'flex' }};">
+                                <span class="review-spec-label">Delivery Date</span>
+                                <span class="review-spec-value fw-bold text-dark" id="revDeliveryDate">{{ $localScheduledAt ? $localScheduledAt->format('d M Y') : date('d M Y') }}</span>
                             </div>
                             <div class="review-spec-row" id="revTimeRow">
-                                <div class="review-spec-label">Delivery Time</div>
-                                <div class="review-spec-val" id="revDeliveryTime">10:30 AM IST</div>
+                                <span class="review-spec-label">Delivery Time</span>
+                                <span class="review-spec-value" id="revDeliveryTime">{{ ($campaign->status === 'sent') ? 'Immediately after confirmation' : ($localScheduledAt ? $localScheduledAt->format('h:i A') . ' ' . ($schedTz === 'Asia/Kolkata' ? 'IST' : $schedTz) : '10:30 AM IST') }}</span>
                             </div>
-                            <div class="review-spec-row" id="revTimeZoneRow">
-                                <div class="review-spec-label">Time Zone</div>
-                                <div class="review-spec-val" id="revTimeZone">Asia/Kolkata</div>
-                            </div>
-                            <div class="review-spec-row">
-                                <div class="review-spec-label">Message Expiry</div>
-                                <div class="review-spec-val">24 hours</div>
+                            <div class="review-spec-row" id="revTimeZoneRow" style="display: {{ ($campaign->status === 'sent') ? 'none' : 'flex' }};">
+                                <span class="review-spec-label">Time Zone</span>
+                                <span class="review-spec-value text-muted" id="revTimeZone">{{ $campaign->time_zone ?? 'Asia/Kolkata' }}</span>
                             </div>
                             <div class="review-spec-row">
-                                <div class="review-spec-label">Quiet Hours</div>
-                                <div class="review-spec-val" id="revQuietHours">Enabled</div>
+                                <span class="review-spec-label">Quiet Hours</span>
+                                <span class="review-spec-value" id="revQuietHours">{{ $campaign->quiet_hours_enabled ? 'Enabled' : 'Disabled' }}</span>
                             </div>
-                        </div>
-                    </div>
-
-                    {{-- 4. Pre-send Checks Card --}}
-                    <div class="wizard-card">
-                        <div class="card-section-title mb-3">Pre-send Checks</div>
-                        <div class="pre-send-checklist-row">
-                            <div class="pre-check-item">
-                                <i class="fa-solid fa-circle-check"></i>
-                                <span>Notification content is complete</span>
-                            </div>
-                            <div class="pre-check-item">
-                                <i class="fa-solid fa-circle-check"></i>
-                                <span><span class="step3-dynamic-count">3</span> selected devices are eligible</span>
-                            </div>
-                            <div class="pre-check-item" id="preCheckScheduleItem">
-                                <i class="fa-solid fa-circle-check"></i>
-                                <span>Scheduled date and time are valid</span>
-                            </div>
-                            <div class="pre-check-item">
-                                <i class="fa-solid fa-circle-check"></i>
-                                <span>Notification permissions and FCM tokens are valid</span>
+                            <div class="review-spec-row">
+                                <span class="review-spec-label">Message Expiry</span>
+                                <span class="review-spec-value">{{ $campaign->expiry_hours ?? 24 }} hours</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {{-- Right Column: Preview, Final Summary & Action Alerts --}}
+                {{-- Right Column: Final Phone Preview & Pre-send Checklist --}}
                 <div class="col-lg-5 col-xl-4">
-                    {{-- 1. Compact Notification Preview Card --}}
-                    <div class="wizard-card">
+                    {{-- Live Preview in Step 4 --}}
+                    <div class="smartphone-preview-container">
                         <div class="d-flex align-items-center justify-content-between mb-2">
-                            <span class="fs-12 fw-bold text-dark">Notification Preview</span>
+                            <span class="fs-12 fw-bold text-dark">Live Preview</span>
                         </div>
 
-                        <div class="preview-tabs-row mb-3">
-                            <button type="button" class="preview-tab-btn active" id="btnRevPreviewAndroid" onclick="switchRevPreviewPlatform('android')">
-                                <i class="fa-brands fa-android me-1"></i> Android
-                            </button>
-                            <button type="button" class="preview-tab-btn" id="btnRevPreviewIos" onclick="switchRevPreviewPlatform('ios')">
-                                <i class="fa-brands fa-apple me-1"></i> iOS
-                            </button>
+                        <div class="preview-tabs-row">
+                            <button type="button" class="preview-tab-btn active" id="btnRevPreviewAndroid" onclick="switchRevPreviewPlatform('android')">Android</button>
+                            <button type="button" class="preview-tab-btn" id="btnRevPreviewIos" onclick="switchRevPreviewPlatform('ios')">iOS</button>
                         </div>
 
-                        <div class="review-preview-compact-card">
-                            <div class="compact-app-logo">
-                                <i class="fa-solid fa-location-dot"></i>
-                            </div>
-                            <div class="compact-preview-content">
-                                <div class="compact-top-row">
-                                    <span class="compact-app-name">GPS Camera</span>
-                                    <span class="compact-time">now</span>
+                        <div class="phone-screen-box">
+                            <div class="phone-top-bar">
+                                <span class="phone-clock">10:30</span>
+                                <span>Mon, Aug 19</span>
+                                <div>
+                                    <i class="fa-solid fa-wifi me-1"></i>
+                                    <i class="fa-solid fa-battery-full"></i>
                                 </div>
-                                <div class="compact-title" id="revPreviewCardTitle">GPS Camera Update</div>
-                                <div class="compact-body" id="revPreviewCardBody">New GPS Camera features are now available. Explore improved location stamps and better performance.</div>
-                                <div id="revPreviewCardImageWrap" class="compact-card-banner d-none mt-2">
-                                    <img id="revPreviewCardImgElem" src="" alt="Notification banner" class="img-fluid rounded-1" style="max-height: 80px; width: 100%; object-fit: cover;">
+                            </div>
+
+                            <div class="phone-notification-card">
+                                <div class="notif-card-header">
+                                    <div class="review-app-logo-box" style="width: 18px; height: 18px; font-size: 10px; border-radius: 4px;">
+                                        <i class="fa-solid fa-location-dot"></i>
+                                    </div>
+                                    <span class="app-name">GPS Camera</span>
+                                    <span class="notif-time">Now</span>
+                                </div>
+                                <div class="notif-card-title" id="revPreviewCardTitle">{{ $campaign->title }}</div>
+                                <div class="notif-card-body" id="revPreviewCardBody">{{ $campaign->message }}</div>
+                                <div id="revPreviewCardImageWrap" class="notif-card-banner {{ $campaign->image_url ? '' : 'd-none' }} mt-2">
+                                    <img id="revPreviewCardImgElem" src="{{ $campaign->image_url ?: '' }}" alt="Notification banner" class="img-fluid rounded-2" style="max-height: 120px; width: 100%; object-fit: cover;">
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {{-- 2. Final Summary Card --}}
+                    {{-- Pre-Send Summary Card --}}
                     <div class="wizard-card">
-                        <div class="fs-12 fw-bold text-dark mb-3">Final Summary</div>
-                        <div class="spec-summary-list border-0 pt-0">
+                        <div class="fs-12 fw-bold text-dark mb-2">Summary Checklist</div>
+
+                        <div class="checklist-item-row" id="preCheckContentItem">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span>Content and title are valid</span>
+                        </div>
+                        <div class="checklist-item-row" id="preCheckAudienceItem">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span>Target audience is deliverable</span>
+                        </div>
+                        <div class="checklist-item-row" id="preCheckScheduleItem">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span>Delivery parameters are configured</span>
+                        </div>
+
+                        <div class="spec-summary-list border-top pt-2 mt-2">
                             <div class="spec-item py-1">
-                                <span class="spec-lbl"><i class="fa-solid fa-users text-muted me-1"></i> Audience</span>
-                                <span class="spec-val" id="revFinalAudience">Individual Devices</span>
+                                <span class="spec-lbl">Audience</span>
+                                <span class="spec-val" id="revFinalAudience">{{ $campaign->audience_label ?? 'Individual Devices' }}</span>
                             </div>
                             <div class="spec-item py-1">
-                                <span class="spec-lbl"><i class="fa-solid fa-paper-plane text-muted me-1"></i> Estimated Delivery</span>
-                                <span class="spec-val"><span class="step3-dynamic-count">3</span> devices</span>
+                                <span class="spec-lbl">Platforms</span>
+                                <span class="spec-val" id="revFinalPlatforms"><i class="fa-brands fa-android text-success"></i> Android {{ $campaign->android_count ?? 2 }} · <i class="fa-brands fa-apple text-dark"></i> iOS {{ $campaign->ios_count ?? 1 }}</span>
                             </div>
                             <div class="spec-item py-1">
-                                <span class="spec-lbl"><i class="fa-regular fa-calendar text-muted me-1"></i> Delivery</span>
-                                <span class="spec-val" id="revFinalDelivery">26 Aug 2026 · 10:30 AM IST</span>
+                                <span class="spec-lbl">Delivery</span>
+                                <span class="spec-val fw-bold" id="revFinalDelivery">{{ $campaign->status === 'sent' ? 'Send Now' : ($localScheduledAt ? $localScheduledAt->format('d M Y · h:i A') . ' ' . ($schedTz === 'Asia/Kolkata' ? 'IST' : $schedTz) : date('d M Y') . ' · 10:30 AM IST') }}</span>
                             </div>
                             <div class="spec-item py-1">
-                                <span class="spec-lbl"><i class="fa-solid fa-mobile-screen text-muted me-1"></i> Platforms</span>
-                                <span class="spec-val" id="revFinalPlatforms"><i class="fa-brands fa-android text-success"></i> Android 2 · <i class="fa-brands fa-apple text-dark"></i> iOS 1</span>
+                                <span class="spec-lbl">Status</span>
+                                <span class="spec-val text-primary fw-bold" id="revFinalStatus">{{ ucfirst($campaign->status ?? 'Draft') }}</span>
                             </div>
-                            <div class="spec-item py-1">
-                                <span class="spec-lbl"><i class="fa-solid fa-circle-check text-muted me-1"></i> Status</span>
-                                <span class="spec-val text-success" id="revFinalStatus">Ready to Schedule</span>
-                            </div>
+                        </div>
+
+                        <div class="alert-amber-light mt-3 mb-0" id="revAmberNotice">
+                            <i class="fa-solid fa-circle-exclamation"></i>
+                            <span id="revAmberText">Changes will update the campaign configuration in the database.</span>
                         </div>
                     </div>
 
-                    {{-- 3. Amber Notice Alert --}}
-                    <div class="alert-amber-light" id="revAmberAlert">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                        <span id="revAmberText">This notification will be queued for scheduled delivery. You can edit or cancel it before the send time.</span>
-                    </div>
-
-                    {{-- 4. Green Ready Callout --}}
+                    {{-- Ready Alert --}}
                     <div class="alert-audience-ready" id="revReadyAlert">
                         <i class="fa-solid fa-circle-check"></i>
                         <div>
-                            <div id="revReadyTitle">Ready to schedule</div>
-                            <div class="fw-normal fs-11" id="revReadyDesc">All checks passed. This notification will be sent to 3 devices on 26 Aug 2026 at 10:30 AM IST.</div>
+                            <div id="revReadyTitle">Ready to update</div>
+                            <div class="fw-normal fs-11" id="revReadyDesc">All validation checks passed. Click below to save your changes.</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- 3. Sticky Bottom Footer Bar --}}
+        {{-- ====================================================================== --}}
+        {{-- 3. Sticky Bottom Wizard Footer Actions --}}
+        {{-- ====================================================================== --}}
         <div class="wizard-bottom-bar">
             <div class="autosave-indicator">
                 <i class="fa-solid fa-check"></i>
-                <span id="autoSaveText">Campaign auto-saved just now</span>
+                <span id="autoSaveText">Changes ready to save</span>
             </div>
 
             <div class="bottom-actions-group">
                 <button type="button" class="btn btn-sm btn-outline-secondary" id="btnBottomBack" onclick="handleBottomBack()" style="display: none;">
                     Back
                 </button>
-                <a href="{{ route('admin.notifications.index') }}" class="btn btn-sm btn-outline-secondary" id="btnBottomCancel">
+                <a href="{{ route('admin.notifications.show', $campaign->id) }}" class="btn btn-sm btn-outline-secondary" id="btnBottomCancel">
                     Cancel
                 </a>
                 <button type="button" class="btn btn-sm btn-outline-secondary" onclick="saveAsDraft()">
@@ -1226,99 +1172,100 @@
     </form>
 </div>
 
-{{-- MODAL: Send Test Notification Modal --}}
-<div class="modal fade" id="sendTestNotificationModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered notification-modal-dialog">
+{{-- ====================================================================== --}}
+{{-- MODAL 1: Send Test Notification Modal --}}
+{{-- ====================================================================== --}}
+<div class="modal fade" id="sendTestNotificationModal" tabindex="-1" aria-labelledby="sendTestModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header modal-header-custom">
+            <div class="modal-header border-0 pb-0">
                 <div class="d-flex align-items-center gap-2">
                     <div class="modal-icon-header-circle icon-blue">
                         <i class="fa-solid fa-paper-plane"></i>
                     </div>
                     <div>
-                        <h5 class="modal-header-title">Send Test Notification</h5>
-                        <p class="modal-header-subtitle">Send a test push notification to a specific test device.</p>
+                        <h5 class="modal-title fs-14 fw-bold text-dark" id="sendTestModalLabel">Send Test Notification</h5>
+                        <p class="modal-subtitle text-muted fs-11 mb-0">Verify notification delivery and appearance on a specific device</p>
                     </div>
                 </div>
-                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close fs-10" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body modal-body-custom">
+            <div class="modal-body py-3">
                 <div class="mb-3">
-                    <label class="form-label text-dark fs-11 mb-1">Target Test Device ID or FCM Token</label>
-                    <input type="text" class="form-control form-control-sm" placeholder="e.g. INS-A7K4-92PQ or FCM token..." value="{{ $devices->first()?->installation_id ?? 'INS-A7K4-92PQ' }}">
+                    <label class="form-label text-dark fs-12 mb-1">Target Test Device <span class="text-danger">*</span></label>
+                    <select class="form-select form-select-sm" id="testDeviceSelect">
+                        @forelse($devices as $dev)
+                            <option value="{{ $dev->fcm_token ?: $dev->device_id }}">
+                                {{ $dev->device_id }} ({{ $dev->platform }}) - {{ $dev->location ? $dev->location->city : 'Online' }}
+                            </option>
+                        @empty
+                            <option value="test_fcm_token_1">Admin Pixel 8 (Android 14) - Active</option>
+                        @endforelse
+                    </select>
                 </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-dark fs-12 mb-1">Custom FCM Token (Optional)</label>
+                    <input type="text" class="form-control form-control-sm font-monospace fs-11" id="testCustomFcmInput" placeholder="Paste specific FCM device registration token...">
+                </div>
+
                 <div class="alert-blue-light mb-0">
                     <i class="fa-solid fa-circle-info"></i>
-                    <span>This test notification will be sent immediately using the current title and body preview.</span>
+                    <span>A test push notification with current title and body will be dispatched immediately.</span>
                 </div>
             </div>
-            <div class="modal-footer modal-footer-custom">
-                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-sm btn-primary" data-bs-dismiss="modal" onclick="alert('Test notification sent successfully!')">
-                    Send Test Now
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary btn-sm" id="btnConfirmSendTest" onclick="sendTestPush()">
+                    <i class="fa-solid fa-paper-plane me-1"></i> Send Test Push
                 </button>
             </div>
         </div>
     </div>
 </div>
-@endsection
 
 @push('scripts')
 <script>
-// Live Database Data injected from Backend
-const dbAudienceData = @json($audienceMetrics);
-const dbSegments = @json($segments);
-const dbLocations = @json($locations);
-const dbDevices = @json($devices);
-
 let currentStep = 1;
-let currentAudienceMode = 'individual';
-let currentDeliveryScheduleMode = 'schedule'; // 'now' or 'schedule'
+let currentAudienceMode = @json($campaign->audience_type ?? 'individual');
+let currentDeliveryScheduleMode = @json($campaign->status === 'sent' ? 'now' : 'schedule');
 
-// ==========================================
-// Bootstrap Red Border Validation Helpers
-// ==========================================
-function clearValidation(input) {
-    if (!input) return;
-    input.classList.remove('is-invalid');
-    input.classList.remove('table-is-invalid');
-    const devErr = document.getElementById('deviceSelectionError');
-    if (devErr && (input.id === 'deviceTableWrap' || input.classList.contains('individual-device-check'))) {
-        devErr.classList.add('d-none');
-    }
-}
+const dbAudienceData = @json($audienceMetrics ?? []);
+const dbSegments = @json($segments ?? []);
+const dbLocations = @json($locations ?? []);
 
+// Validation logic per step
 function validateStep(step) {
     let isValid = true;
     let firstErrorField = null;
 
     if (step === 1) {
-        const campName = document.getElementById('inputCampaignName');
-        const notifTitle = document.getElementById('inputNotificationTitle');
-        const notifMsg = document.getElementById('inputNotificationMessage');
+        const campInput = document.getElementById('inputCampaignName');
+        const titleInput = document.getElementById('inputNotificationTitle');
+        const msgInput = document.getElementById('inputNotificationMessage');
 
-        if (!campName || !campName.value.trim()) {
-            campName.classList.add('is-invalid');
+        if (!campInput || !campInput.value.trim()) {
+            campInput.classList.add('is-invalid');
             isValid = false;
-            if (!firstErrorField) firstErrorField = campName;
+            if (!firstErrorField) firstErrorField = campInput;
         } else {
-            campName.classList.remove('is-invalid');
+            campInput.classList.remove('is-invalid');
         }
 
-        if (!notifTitle || !notifTitle.value.trim()) {
-            notifTitle.classList.add('is-invalid');
+        if (!titleInput || !titleInput.value.trim()) {
+            titleInput.classList.add('is-invalid');
             isValid = false;
-            if (!firstErrorField) firstErrorField = notifTitle;
+            if (!firstErrorField) firstErrorField = titleInput;
         } else {
-            notifTitle.classList.remove('is-invalid');
+            titleInput.classList.remove('is-invalid');
         }
 
-        if (!notifMsg || !notifMsg.value.trim()) {
-            notifMsg.classList.add('is-invalid');
+        if (!msgInput || !msgInput.value.trim()) {
+            msgInput.classList.add('is-invalid');
             isValid = false;
-            if (!firstErrorField) firstErrorField = notifMsg;
+            if (!firstErrorField) firstErrorField = msgInput;
         } else {
-            notifMsg.classList.remove('is-invalid');
+            msgInput.classList.remove('is-invalid');
         }
     } else if (step === 2) {
         if (currentAudienceMode === 'individual') {
@@ -1430,9 +1377,9 @@ function goToStep(step) {
     const topSendTestBtn = document.getElementById('topSendTestBtn');
 
     if (step === 1) {
-        if (titleEl) titleEl.textContent = 'Create Notification';
-        if (subEl) subEl.textContent = 'Compose and deliver a targeted Firebase push notification';
-        if (topBtn) { topBtn.style.display = 'inline-flex'; topBtn.textContent = 'Review & Send'; }
+        if (titleEl) titleEl.textContent = 'Edit Notification';
+        if (subEl) subEl.textContent = 'Update and adjust push notification settings and delivery details';
+        if (topBtn) { topBtn.style.display = 'inline-flex'; topBtn.textContent = 'Review & Save'; }
         if (topCancelLink) topCancelLink.style.display = 'none';
         if (topSaveDraftBtn) topSaveDraftBtn.style.display = 'inline-flex';
         if (topSendTestBtn) topSendTestBtn.style.display = 'inline-flex';
@@ -1441,7 +1388,7 @@ function goToStep(step) {
         if (bottomCancel) bottomCancel.style.display = 'inline-flex';
         if (sendTestBtn) sendTestBtn.style.display = 'inline-flex';
     } else if (step === 2) {
-        if (titleEl) titleEl.textContent = 'Create Notification';
+        if (titleEl) titleEl.textContent = 'Edit Notification';
         if (subEl) subEl.textContent = 'Choose who should receive this notification';
         if (topBtn) { topBtn.style.display = 'none'; }
         if (topCancelLink) topCancelLink.style.display = 'inline-flex';
@@ -1452,22 +1399,22 @@ function goToStep(step) {
         if (bottomCancel) bottomCancel.style.display = 'none';
         if (sendTestBtn) sendTestBtn.style.display = 'none';
     } else if (step === 3) {
-        if (titleEl) titleEl.textContent = 'Create Notification';
+        if (titleEl) titleEl.textContent = 'Edit Notification';
         if (subEl) subEl.textContent = 'Choose when this notification should be delivered';
         if (topBtn) { topBtn.style.display = 'none'; }
         if (topCancelLink) topCancelLink.style.display = 'inline-flex';
         if (topSaveDraftBtn) topSaveDraftBtn.style.display = 'none';
         if (topSendTestBtn) topSendTestBtn.style.display = 'none';
-        if (bottomPrimary) { bottomPrimary.innerHTML = 'Continue to Review & Send'; }
+        if (bottomPrimary) { bottomPrimary.innerHTML = 'Continue to Review & Save'; }
         if (bottomBack) bottomBack.style.display = 'inline-flex';
         if (bottomCancel) bottomCancel.style.display = 'none';
         if (sendTestBtn) sendTestBtn.style.display = 'none';
     } else if (step === 4) {
-        if (titleEl) titleEl.textContent = 'Create Notification';
+        if (titleEl) titleEl.textContent = 'Edit Notification';
         if (subEl) {
             subEl.textContent = (currentDeliveryScheduleMode === 'schedule') 
-                ? 'Review all details before scheduling this notification' 
-                : 'Review all details before sending this notification';
+                ? 'Review all details before saving and scheduling this notification' 
+                : 'Review all details before saving and sending this notification';
         }
         if (topBtn) { topBtn.style.display = 'none'; }
         if (topCancelLink) topCancelLink.style.display = 'inline-flex';
@@ -1476,9 +1423,9 @@ function goToStep(step) {
 
         if (bottomPrimary) {
             if (currentDeliveryScheduleMode === 'schedule') {
-                bottomPrimary.innerHTML = '<i class="fa-solid fa-calendar-check me-1"></i> Schedule Notification';
+                bottomPrimary.innerHTML = '<i class="fa-solid fa-calendar-check me-1"></i> Save & Schedule';
             } else {
-                bottomPrimary.innerHTML = '<i class="fa-solid fa-paper-plane me-1"></i> Send Notification';
+                bottomPrimary.innerHTML = '<i class="fa-solid fa-paper-plane me-1"></i> Save & Send';
             }
         }
         if (bottomBack) bottomBack.style.display = 'inline-flex';
@@ -1529,12 +1476,12 @@ function submitFinalNotification() {
     } else {
         document.getElementById('campaignStatusInput').value = 'sent';
     }
-    document.getElementById('createNotificationForm').submit();
+    document.getElementById('editNotificationForm').submit();
 }
 
 function saveAsDraft() {
     document.getElementById('campaignStatusInput').value = 'draft';
-    document.getElementById('createNotificationForm').submit();
+    document.getElementById('editNotificationForm').submit();
 }
 
 // Live Update of character count & phone preview
@@ -1588,14 +1535,12 @@ function handleImageSelected(input) {
     const maxBytes = 2 * 1024 * 1024; // 2 MB
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
 
-    // 1. Validate File Type (Only JPG & PNG)
     if (!allowedTypes.includes(file.type)) {
         showImageError('Invalid file type. Please upload a PNG or JPG image.');
         input.value = '';
         return;
     }
 
-    // 2. Validate File Size (Max 2MB)
     if (file.size > maxBytes) {
         const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
         showImageError(`Image size exceeds 2 MB limit (Selected: ${sizeMb} MB). Please choose an image smaller than 2 MB.`);
@@ -1603,7 +1548,6 @@ function handleImageSelected(input) {
         return;
     }
 
-    // Valid Image: Clear Error
     if (errorBox) {
         errorBox.textContent = '';
         errorBox.classList.add('d-none');
@@ -1611,13 +1555,13 @@ function handleImageSelected(input) {
     const dropzone = document.getElementById('dropzoneContainer');
     if (dropzone) dropzone.classList.remove('is-invalid');
 
-    // Read and preview
+    document.getElementById('hiddenRemoveImage').value = '0';
+
     const reader = new FileReader();
     reader.onload = function(e) {
         uploadedImageDataUrl = e.target.result;
         uploadedImageFileName = file.name;
         
-        // Show dropzone preview state
         document.getElementById('dropzoneEmptyState')?.classList.add('d-none');
         const previewState = document.getElementById('dropzonePreviewState');
         if (previewState) {
@@ -1630,7 +1574,6 @@ function handleImageSelected(input) {
             if (fsize) fsize.textContent = formatBytes(file.size);
         }
 
-        // Show Live Phone Preview Image
         const previewImgWrap = document.getElementById('previewCardImageWrap');
         const previewImgElem = document.getElementById('previewCardImgElem');
         if (previewImgWrap && previewImgElem) {
@@ -1638,7 +1581,6 @@ function handleImageSelected(input) {
             previewImgWrap.classList.remove('d-none');
         }
 
-        // Show Step 4 Preview Image
         const revPreviewImgWrap = document.getElementById('revPreviewCardImageWrap');
         const revPreviewImgElem = document.getElementById('revPreviewCardImgElem');
         if (revPreviewImgWrap && revPreviewImgElem) {
@@ -1646,7 +1588,6 @@ function handleImageSelected(input) {
             revPreviewImgWrap.classList.remove('d-none');
         }
 
-        // Show Step 4 Review Spec Row
         const revImageRow = document.getElementById('revImageRow');
         const revThumb = document.getElementById('revThumbnailImg');
         const revName = document.getElementById('revImageName');
@@ -1668,6 +1609,7 @@ function removeSelectedImage(e) {
     if (input) input.value = '';
     uploadedImageDataUrl = null;
     uploadedImageFileName = null;
+    document.getElementById('hiddenRemoveImage').value = '1';
 
     document.getElementById('dropzoneEmptyState')?.classList.remove('d-none');
     document.getElementById('dropzonePreviewState')?.classList.add('d-none');
@@ -2110,7 +2052,7 @@ function setDeliveryScheduleMode(mode) {
         if (readyDesc) readyDesc.textContent = 'This notification will be sent to ' + count + ' devices immediately after final confirmation.';
 
         if (quietHoursSwitch) { quietHoursSwitch.checked = false; quietHoursSwitch.disabled = true; }
-        if (quietHoursSub) quietHoursSub.textContent = 'Not applied when Send Now is selected';
+        if (quietHoursSub) quietHoursSub.textContent = 'Not applied for immediate sends';
     } else {
         if (cardNow) cardNow.classList.remove('selected');
         if (cardLater) cardLater.classList.add('selected');
@@ -2128,20 +2070,19 @@ function setDeliveryScheduleMode(mode) {
         if (timeRow) {
             timeRow.style.display = 'flex';
             timeRow.querySelector('.spec-lbl').innerHTML = '<i class="fa-regular fa-clock text-muted me-1"></i> Time';
-            document.getElementById('step3TimeVal').textContent = document.getElementById('inputScheduledTime')?.value || '10:30 AM';
         }
         if (timeZoneRow) timeZoneRow.style.display = 'flex';
         if (permRow) permRow.style.display = 'none';
         if (fcmRow) fcmRow.style.display = 'none';
 
         if (readyTitle) readyTitle.textContent = 'Schedule is ready';
-        if (readyDesc) readyDesc.textContent = 'This notification will be sent to ' + count + ' devices on 26 Aug 2026 at 10:30 AM IST.';
 
-        if (quietHoursSwitch) { quietHoursSwitch.checked = true; quietHoursSwitch.disabled = false; }
+        if (quietHoursSwitch) { quietHoursSwitch.disabled = false; }
         if (quietHoursSub) quietHoursSub.textContent = 'Avoid delivery between 10:00 PM and 8:00 AM';
+
+        syncScheduleSummary();
     }
 
-    syncScheduleSummary();
     syncAllWizardFields();
 }
 
@@ -2157,32 +2098,37 @@ function getTzAbbr(tz) {
 }
 
 function syncScheduleSummary() {
-    const dateVal = document.getElementById('inputScheduledDate')?.value || '26 Aug 2026';
-    const timeVal = document.getElementById('inputScheduledTime')?.value || '10:30 AM';
-    const tzVal = document.getElementById('selectScheduleTimeZone')?.value || 'Asia/Kolkata';
-    const tzAbbr = getTzAbbr(tzVal);
+    const dateInput = document.getElementById('inputScheduledDate');
+    const timeInput = document.getElementById('inputScheduledTime');
+    const tzSelect = document.getElementById('selectScheduleTimeZone');
     const notice = document.getElementById('scheduledDeliveryNotice');
+    const step3DateVal = document.getElementById('step3DateVal');
+    const step3TimeVal = document.getElementById('step3TimeVal');
+    const step3TzVal = document.getElementById('step3TimeZoneVal');
     const readyDesc = document.getElementById('step3ReadyDesc');
     const count = document.querySelectorAll('.step3-dynamic-count')[0]?.textContent || '3';
 
+    const dateVal = dateInput?.value || '{{ date("d M Y") }}';
+    const timeVal = timeInput?.value || '10:30 AM';
+    const tzVal = tzSelect?.value || 'Asia/Kolkata';
+    const tzAbbr = getTzAbbr(tzVal);
+
     if (notice) notice.textContent = 'Scheduled delivery: ' + dateVal + ' at ' + timeVal + ' ' + tzAbbr;
-    if (document.getElementById('step3DateVal')) document.getElementById('step3DateVal').textContent = dateVal;
-    if (document.getElementById('step3TimeVal') && currentDeliveryScheduleMode === 'schedule') {
-        document.getElementById('step3TimeVal').textContent = timeVal;
-    }
-    if (document.getElementById('step3TimeZoneVal')) document.getElementById('step3TimeZoneVal').textContent = tzVal + ' (' + tzAbbr + ')';
-    if (readyDesc && currentDeliveryScheduleMode === 'schedule') {
+    if (step3DateVal) step3DateVal.textContent = dateVal;
+    if (step3TimeVal) step3TimeVal.textContent = timeVal;
+    if (step3TzVal) step3TzVal.textContent = tzVal + ' (' + tzAbbr + ')';
+    if (readyDesc) {
         readyDesc.textContent = 'This notification will be sent to ' + count + ' devices on ' + dateVal + ' at ' + timeVal + ' ' + tzAbbr + '.';
     }
 }
 
-// Master Sync to Step 4 (Review & Send)
+// Master Sync to Step 4 (Review & Save)
 function syncAllWizardFields() {
-    const campName = document.getElementById('inputCampaignName')?.value || 'GPS Camera Feature Update';
-    const notifTitle = document.getElementById('inputNotificationTitle')?.value || 'GPS Camera Update';
-    const notifMsg = document.getElementById('inputNotificationMessage')?.value || 'New GPS Camera features are now available. Explore improved location stamps and better performance.';
+    const campName = document.getElementById('inputCampaignName')?.value || '{{ $campaign->name }}';
+    const notifTitle = document.getElementById('inputNotificationTitle')?.value || '{{ $campaign->title }}';
+    const notifMsg = document.getElementById('inputNotificationMessage')?.value || '{{ $campaign->message }}';
     const actionVal = document.getElementById('inputAction')?.value || 'open_app';
-    const dateVal = document.getElementById('inputScheduledDate')?.value || '26 Aug 2026';
+    const dateVal = document.getElementById('inputScheduledDate')?.value || '{{ date("d M Y") }}';
     const timeVal = document.getElementById('inputScheduledTime')?.value || '10:30 AM';
     const tzVal = document.getElementById('selectScheduleTimeZone')?.value || 'Asia/Kolkata';
 
@@ -2299,7 +2245,7 @@ function syncAllWizardFields() {
 
         if (revFinalDelivery) revFinalDelivery.textContent = 'Send Now';
         if (revFinalStatus) revFinalStatus.textContent = 'Ready to Send';
-        if (revAmberText) revAmberText.textContent = 'Sending cannot be undone. Confirm all details before continuing.';
+        if (revAmberText) revAmberText.textContent = 'Updating will trigger immediate delivery to targeted devices.';
         if (revReadyTitle) revReadyTitle.textContent = 'Ready to send';
         if (revReadyDesc) revReadyDesc.textContent = 'All checks passed. This notification is ready for immediate delivery to ' + count + ' devices.';
     } else {
@@ -2317,155 +2263,139 @@ function syncAllWizardFields() {
             revTimeZoneRow.style.display = 'flex';
             document.getElementById('revTimeZone').textContent = tzVal + ' (' + getTzAbbr(tzVal) + ')';
         }
-        if (revQuietHours) revQuietHours.textContent = 'Enabled';
+        if (revQuietHours) revQuietHours.textContent = document.getElementById('swRespectQuietHours')?.checked ? 'Enabled' : 'Disabled';
         if (revPreCheckSchedule) revPreCheckSchedule.innerHTML = '<i class="fa-solid fa-circle-check"></i> <span>Scheduled date and time are valid</span>';
 
         if (revFinalDelivery) revFinalDelivery.textContent = dateVal + ' · ' + timeVal + ' ' + getTzAbbr(tzVal);
         if (revFinalStatus) revFinalStatus.textContent = 'Scheduled';
         if (revAmberText) revAmberText.textContent = 'This notification will be queued for scheduled delivery. You can edit or cancel it before the send time.';
-        if (revReadyTitle) revReadyTitle.textContent = 'Ready to schedule';
-        if (revReadyDesc) revReadyDesc.textContent = 'All checks passed. This notification will be sent to ' + count + ' devices on ' + dateVal + ' at ' + timeVal + ' ' + getTzAbbr(tzVal) + '.';
+        if (revReadyTitle) revReadyTitle.textContent = 'Ready to update';
+        if (revReadyDesc) revReadyDesc.textContent = 'All checks passed. This notification will be scheduled for delivery to ' + count + ' devices on ' + dateVal + ' at ' + timeVal + ' ' + getTzAbbr(tzVal) + '.';
     }
 }
 
-// Individual Device Selection helpers
-function toggleAllDevices(master) {
+// Device table interactions
+function toggleAllDevices(masterCheck) {
+    const isChecked = masterCheck.checked;
     document.querySelectorAll('.individual-device-check').forEach(cb => {
-        cb.checked = master.checked;
+        cb.checked = isChecked;
     });
-    clearValidation(document.getElementById('deviceTableWrap'));
-    updateIndividualSelection();
+    onDeviceCheckChange();
 }
 
-function updateIndividualSelection() {
-    const count = document.querySelectorAll('.individual-device-check:checked').length;
+function onDeviceCheckChange() {
+    const allChecks = document.querySelectorAll('.individual-device-check');
+    const checked = document.querySelectorAll('.individual-device-check:checked');
+    const master = document.getElementById('selectAllDevicesCheck');
+    const tableWrap = document.getElementById('deviceTableWrap');
+    const errorMsg = document.getElementById('deviceSelectionError');
     const label = document.getElementById('deviceSelectedCountLabel');
-    const badge = document.getElementById('badgeIndividualCount');
-    if (label) label.textContent = count + ' devices selected';
-    if (badge) badge.textContent = count;
 
-    if (currentAudienceMode === 'individual') {
-        const hero = document.getElementById('step2HeroCount');
-        const specVal = document.getElementById('specRow1Val');
-        const estVal = document.getElementById('specRow3Val');
-        const readyDesc = document.getElementById('audienceReadyDesc');
-        if (hero) hero.textContent = count;
-        if (specVal) specVal.textContent = count;
-        if (estVal) estVal.textContent = count;
-        if (readyDesc) readyDesc.textContent = count + ' selected devices can receive this notification.';
-        document.querySelectorAll('.step3-dynamic-count').forEach(el => el.textContent = count);
-        document.getElementById('hiddenTotalAudience').value = count;
+    if (master) {
+        master.checked = (checked.length === allChecks.length && allChecks.length > 0);
+        master.indeterminate = (checked.length > 0 && checked.length < allChecks.length);
     }
-    syncAllWizardFields();
+
+    if (label) {
+        label.textContent = `${checked.length} devices selected`;
+    }
+
+    if (checked.length > 0) {
+        if (tableWrap) tableWrap.classList.remove('table-is-invalid');
+        if (errorMsg) errorMsg.classList.add('d-none');
+    }
+
+    selectAudienceMode('individual');
 }
 
 function clearDeviceSelection() {
     document.querySelectorAll('.individual-device-check').forEach(cb => cb.checked = false);
-    const master = document.getElementById('checkAllDevices');
-    if (master) master.checked = false;
-    updateIndividualSelection();
+    const master = document.getElementById('selectAllDevicesCheck');
+    if (master) {
+        master.checked = false;
+        master.indeterminate = false;
+    }
+    onDeviceCheckChange();
 }
 
-function filterDeviceTable() {
-    const query = document.getElementById('individualDeviceSearch').value.toLowerCase();
-    document.querySelectorAll('.device-row').forEach(row => {
-        const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(query) ? '' : 'none';
-    });
+function clearValidation(input) {
+    if (input) input.classList.remove('is-invalid');
 }
 
-function filterDevicePlatform(platform) {
-    document.querySelectorAll('.device-row').forEach(row => {
-        if (platform === 'All') {
-            row.style.display = '';
+function sendTestPush() {
+    const select = document.getElementById('testDeviceSelect');
+    const custom = document.getElementById('testCustomFcmInput');
+    const target = custom?.value.trim() || select?.value || 'Selected Device';
+
+    const btn = document.getElementById('btnConfirmSendTest');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Sending...';
+    }
+
+    setTimeout(() => {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-paper-plane me-1"></i> Send Test Push';
+        }
+
+        const modalEl = document.getElementById('sendTestNotificationModal');
+        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+        if (modalInstance) modalInstance.hide();
+
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'success',
+                title: 'Test Push Sent',
+                text: 'Notification dispatched successfully to ' + target,
+                timer: 3000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
         } else {
-            row.style.display = (row.dataset.platform === platform) ? '' : 'none';
+            alert('Test push notification sent successfully to ' + target);
         }
-    });
+    }, 900);
 }
 
-let fpDatePicker = null;
-let fpTimePicker = null;
-
-function initSchedulePickers() {
-    if (typeof flatpickr !== 'undefined') {
-        const dateInput = document.getElementById('inputScheduledDate');
-        if (dateInput) {
-            fpDatePicker = flatpickr(dateInput, {
-                dateFormat: 'd M Y',
-                minDate: 'today',
-                defaultDate: dateInput.value || 'today',
-                disableMobile: true,
-                onChange: function(selectedDates, dateStr) {
-                    clearValidation(dateInput);
-                    syncScheduleSummary();
-                    syncAllWizardFields();
-                }
-            });
-            document.getElementById('btnDateCalSuffix')?.addEventListener('click', function(e) {
-                e.stopPropagation();
-                fpDatePicker.open();
-            });
-        }
-
-        const timeInput = document.getElementById('inputScheduledTime');
-        if (timeInput) {
-            fpTimePicker = flatpickr(timeInput, {
-                enableTime: true,
-                noCalendar: true,
-                dateFormat: 'h:i K',
-                defaultDate: timeInput.value || '10:30 AM',
-                disableMobile: true,
-                onChange: function(selectedDates, dateStr) {
-                    clearValidation(timeInput);
-                    syncScheduleSummary();
-                    syncAllWizardFields();
-                }
-            });
-            document.getElementById('btnTimeClockSuffix')?.addEventListener('click', function(e) {
-                e.stopPropagation();
-                fpTimePicker.open();
-            });
-        }
-    }
-
-    // Drag and Drop support for Dropzone
-    const dropzone = document.getElementById('dropzoneContainer');
-    if (dropzone) {
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropzone.addEventListener(eventName, (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                dropzone.classList.add('dragover');
-            }, false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropzone.addEventListener(eventName, (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                dropzone.classList.remove('dragover');
-            }, false);
-        });
-
-        dropzone.addEventListener('drop', (e) => {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            if (files && files.length > 0) {
-                const fileInput = document.getElementById('notifImageInput');
-                fileInput.files = files;
-                handleImageSelected(fileInput);
-            }
-        }, false);
-    }
-}
-
+// Flatpickr & Initialization
 document.addEventListener('DOMContentLoaded', function() {
+    if (typeof flatpickr !== 'undefined') {
+        flatpickr("#inputScheduledDate", {
+            dateFormat: "d M Y",
+            minDate: "today",
+            defaultDate: "{{ $localScheduledAt ? $localScheduledAt->format('d M Y') : date('d M Y') }}",
+            onChange: function() {
+                syncScheduleSummary();
+            }
+        });
+
+        flatpickr("#inputScheduledTime", {
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: "h:i K",
+            defaultDate: "{{ $localScheduledAt ? $localScheduledAt->format('h:i A') : '10:30 AM' }}",
+            onChange: function() {
+                syncScheduleSummary();
+            }
+        });
+
+        document.getElementById('btnDateCalSuffix')?.addEventListener('click', function() {
+            document.getElementById('inputScheduledDate')?._flatpickr?.open();
+        });
+
+        document.getElementById('btnTimeClockSuffix')?.addEventListener('click', function() {
+            document.getElementById('inputScheduledTime')?._flatpickr?.open();
+        });
+    }
+
+    // Initial setup
     initLocationCascading();
-    updateLivePreview();
-    selectAudienceMode('individual');
-    setDeliveryScheduleMode('schedule');
-    initSchedulePickers();
+    selectAudienceMode(currentAudienceMode);
+    setDeliveryScheduleMode(currentDeliveryScheduleMode);
+    syncAllWizardFields();
 });
 </script>
 @endpush
+@endsection

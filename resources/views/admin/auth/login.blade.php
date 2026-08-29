@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Super Admin Login - GPS Camera Admin</title>
+    <title>Super Admin Login - Raiyaan apps Admin</title>
 
     <!-- Vite Assets (Includes Bootstrap 5, FontAwesome, Inter Font, SweetAlert2) -->
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
@@ -44,8 +44,8 @@
         </div>
 
         <div class="hero-header">
-            <img src="{{ asset('assets/Logos/Geo icon.png') }}" alt="GeoCam Logo" class="hero-logo-img">
-            <span class="hero-brand-name">GPS Camera Admin</span>
+            <img src="{{ asset('assets/Logos/weblogo.png') }}" alt="GeoCam Logo" class="hero-logo-img">
+            <span class="hero-brand-name">Raiyaan Apps Admin</span>
         </div>
 
         <div class="hero-body">
@@ -104,7 +104,7 @@
             </div>
 
             <h2 class="auth-card-title">Welcome back</h2>
-            <p class="auth-card-subtitle">Sign in to securely manage GPS Camera operations</p>
+            <p class="auth-card-subtitle">Sign in to securely manage Raiyaan apps operations</p>
 
             <form action="{{ route('admin.login.submit') }}" method="POST" class="needs-validation" novalidate>
                 @csrf
@@ -162,7 +162,7 @@
 
         <!-- Footer -->
         <div class="form-panel-footer">
-            <div>© 2026 GPS Camera Admin</div>
+            <div>© 2026 Raiyaan apps Admin</div>
             <div class="footer-links">
                 <a href="#">Privacy Policy</a>
                 <span>|</span>

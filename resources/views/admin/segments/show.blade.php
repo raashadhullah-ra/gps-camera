@@ -50,14 +50,14 @@
         }
     }
 
-    $androidPct = $segment->platform_distribution['android'] ?? 91;
-    $iosPct = $segment->platform_distribution['ios'] ?? 9;
+    $androidPct = (int) ($segment->platform_distribution['android'] ?? 100);
+    $iosPct = (int) ($segment->platform_distribution['ios'] ?? 0);
 
-    $audSize = $segment->audience_size > 0 ? $segment->audience_size : 7054;
-    $delCount = $segment->deliverable_count > 0 ? $segment->deliverable_count : 6842;
-    $exCount = $segment->excluded_count > 0 ? $segment->excluded_count : 212;
-    $delPct = $segment->deliverable_percentage > 0 ? $segment->deliverable_percentage : 97.0;
-    $exPct = $segment->excluded_percentage > 0 ? $segment->excluded_percentage : 3.0;
+    $audSize = (int) ($segment->audience_size ?? 0);
+    $delCount = (int) ($segment->deliverable_count ?? 0);
+    $exCount = max(0, $audSize - $delCount);
+    $delPct = $audSize > 0 ? round(($delCount / $audSize) * 100) : 100;
+    $exPct = $audSize > 0 ? round(($exCount / $audSize) * 100) : 0;
 
     $statusPillClass = match(strtolower($segment->status ?? 'active')) {
         'active'   => 'pill-active',
@@ -215,45 +215,66 @@
 
             {{-- 5. Estimated Audience Card --}}
             <div class="segment-card">
-                <div class="card-header-icon-title">
+                <div class="card-header-icon-title mb-3">
                     <i class="fa-solid fa-users"></i>
                     <h3>Estimated Audience</h3>
                 </div>
-                <div class="audience-estimate-row">
-                    <div class="aud-stats-group">
-                        <div class="aud-stat-item">
-                            <div class="stat-number stat-primary">{{ number_format($audSize) }}</div>
-                            <div class="stat-label">Eligible Devices <i class="fa-solid fa-circle-info" title="Total eligible device installations"></i></div>
-                            <div class="stat-subtext">100% of total</div>
-                        </div>
 
-                        <div class="aud-stat-item">
-                            <div class="stat-number stat-deliverable">{{ number_format($delCount) }}</div>
-                            <div class="stat-label">Deliverable Devices <i class="fa-solid fa-circle-info" title="Reachable via push notification"></i></div>
-                            <div class="stat-subtext sub-green">{{ $delPct }}% of eligible</div>
-                        </div>
-
-                        <div class="aud-stat-item">
-                            <div class="stat-number stat-excluded">{{ number_format($exCount) }}</div>
-                            <div class="stat-label">Excluded Devices <i class="fa-solid fa-circle-info" title="Excluded due to inactive/permissions"></i></div>
-                            <div class="stat-subtext sub-orange">{{ $exPct }}% of eligible</div>
+                {{-- 3-Box Metrics Grid --}}
+                <div class="row g-2 text-center mb-3">
+                    <div class="col-4">
+                        <div class="p-2 bg-light rounded h-100 d-flex flex-column justify-content-center">
+                            <div class="stat-hero-number eligible">{{ number_format($audSize) }}</div>
+                            <div class="text-muted fs-xs fw-semibold">Eligible</div>
+                            <div class="text-muted fs-11 mt-1">100% of total</div>
                         </div>
                     </div>
-
-                    <div class="aud-donut-box">
-                        <div class="donut-ring" style="background: conic-gradient(#2563eb 0% {{ $androidPct }}%, #cbd5e1 {{ $androidPct }}% 100%);"></div>
-                        <div class="donut-legend">
-                            <div class="legend-row">
-                                <span class="dot-android"></span>
-                                <span>Android</span>
-                                <span class="legend-pct ms-auto">{{ $androidPct }}%</span>
-                            </div>
-                            <div class="legend-row">
-                                <span class="dot-ios"></span>
-                                <span>iOS</span>
-                                <span class="legend-pct ms-auto">{{ $iosPct }}%</span>
-                            </div>
+                    <div class="col-4">
+                        <div class="p-2 bg-light rounded h-100 d-flex flex-column justify-content-center">
+                            <div class="stat-sub-number deliverable">{{ number_format($delCount) }}</div>
+                            <div class="text-muted fs-xs fw-semibold">Deliverable</div>
+                            <div class="text-success fs-11 mt-1">{{ $delPct }}% of eligible</div>
                         </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 bg-light rounded h-100 d-flex flex-column justify-content-center">
+                            <div class="stat-sub-number excluded">{{ number_format($exCount) }}</div>
+                            <div class="text-muted fs-xs fw-semibold">Excluded</div>
+                            <div class="text-muted fs-11 mt-1">{{ $exPct }}% of eligible</div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Platform Donut + Legend --}}
+                <div class="d-flex align-items-center justify-content-center gap-4 py-2 border-top border-bottom my-3">
+                    <div style="width: 64px; height: 64px; border-radius: 50%; background: conic-gradient(#2563eb 0% {{ $androidPct }}%, #cbd5e1 {{ $androidPct }}% 100%);"></div>
+                    <div class="fs-xs">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="rounded-circle d-inline-block" style="width: 8px; height: 8px; background-color: #2563eb;"></span>
+                            <span class="text-muted">Android</span>
+                            <strong class="ms-auto">{{ $androidPct }}%</strong>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="rounded-circle d-inline-block" style="width: 8px; height: 8px; background-color: #cbd5e1;"></span>
+                            <span class="text-muted">iOS</span>
+                            <strong class="ms-auto">{{ $iosPct }}%</strong>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Breakdown Rows --}}
+                <div class="fs-xs d-flex flex-column gap-2">
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Anonymous Users</span>
+                        <strong>{{ number_format($audSize) }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Active Devices</span>
+                        <strong>{{ number_format($audSize) }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Notifications Enabled</span>
+                        <strong>{{ number_format($delCount) }}</strong>
                     </div>
                 </div>
             </div>

@@ -332,34 +332,88 @@
                 </div>
             </div>
 
-            <!-- Card 6: Visual Location Map Card -->
+            <!-- Card 6: Real Interactive Location Map Card -->
             <div class="detail-card card-location-map">
-                <div class="card-header-clean">
-                    <h3 class="card-title">Location</h3>
+                <div class="card-header-clean d-flex justify-content-between align-items-center">
+                    <h3 class="card-title mb-0">Location</h3>
+                    @if($device->has_coordinates)
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-11 px-2 py-0">
+                            <i class="fa-solid fa-satellite-dish me-1"></i> Live GPS
+                        </span>
+                    @endif
                 </div>
                 <div class="card-body-spec">
-                    <div class="location-title-text">{{ $device->full_location_formatted }}</div>
-                    
-                    <!-- Interactive Visual Map Card Container -->
-                    <div class="map-visual-container">
-                        <!-- Stylized Map Illustration Background -->
-                        <div class="map-render-bg">
-                            <div class="map-pin-indicator">
-                                <div class="pin-pulse"></div>
-                                <i class="fa-solid fa-location-dot pin-icon"></i>
+                    @if($device->has_location || $device->has_coordinates)
+                        <div class="location-title-text fw-medium text-dark">{{ $device->full_location_formatted }}</div>
+
+                        @if($device->has_coordinates)
+                            <div class="fs-12 text-muted mb-2 d-flex align-items-center gap-1">
+                                <i class="fa-solid fa-location-crosshairs text-primary"></i>
+                                <span>{{ $device->coordinates_formatted }}</span>
                             </div>
-                            <div class="map-label-tag">
-                                <span>{{ $device->city ?? 'Tirunelveli' }}</span>
+
+                            <!-- Real Interactive Leaflet OpenStreetMap -->
+                            <div id="deviceLeafletMap"></div>
+
+                            <div class="mt-3">
+                                <button type="button" class="btn btn-view-map-link w-100" onclick="openDeviceFullMapModal()">
+                                    <span>View Full Map</span>
+                                    <i class="fa-solid fa-arrow-up-right-from-square fs-12 ms-1"></i>
+                                </button>
+                            </div>
+                        @else
+                            <!-- City available without exact GPS coordinates -->
+                            <div class="empty-location-box">
+                                <div class="empty-loc-icon text-primary">
+                                    <i class="fa-solid fa-city"></i>
+                                </div>
+                                <div class="empty-loc-title">{{ $device->location_formatted }}</div>
+                                <div class="empty-loc-desc">City identified, but precise GPS coordinates not sent.</div>
+                                <div class="empty-loc-badge">
+                                    <span class="badge-loc-status granted">
+                                        <i class="fa-regular fa-circle-check me-1"></i> {{ $device->location_permission_label }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <button type="button" class="btn btn-view-map-link w-100" onclick="openDeviceFullMapModal()">
+                                    <span>View Full Map</span>
+                                    <i class="fa-solid fa-arrow-up-right-from-square fs-12 ms-1"></i>
+                                </button>
+                            </div>
+                        @endif
+                    @else
+                        <!-- Clean Empty State when Location is NULL -->
+                        <div class="location-title-text text-muted mb-2">
+                            <i class="fa-solid fa-location-slash me-1 text-secondary"></i> Location Unavailable
+                        </div>
+
+                        <div class="empty-location-box">
+                            <div class="empty-loc-icon">
+                                <i class="fa-solid fa-location-crosshairs"></i>
+                            </div>
+                            <div class="empty-loc-title">No GPS Coordinates Reported</div>
+                            <div class="empty-loc-desc">Device has not transmitted GPS location telemetry.</div>
+                            <div class="empty-loc-badge">
+                                @if($device->location_granted)
+                                    <span class="badge-loc-status granted">
+                                        <i class="fa-regular fa-circle-check me-1"></i> {{ $device->location_permission_label }}: Granted
+                                    </span>
+                                @else
+                                    <span class="badge-loc-status denied">
+                                        <i class="fa-regular fa-circle-xmark me-1"></i> Location Permission: Denied
+                                    </span>
+                                @endif
                             </div>
                         </div>
-                    </div>
 
-                    <div class="mt-3">
-                        <a href="https://maps.google.com/?q={{ $device->latitude ?? '8.7139' }},{{ $device->longitude ?? '77.7567' }}" target="_blank" class="btn btn-view-map-link w-100">
-                            <span>View Full Map</span>
-                            <i class="fa-solid fa-arrow-up-right-from-square fs-12 ms-1"></i>
-                        </a>
-                    </div>
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-view-map-link w-100 disabled" disabled>
+                                <i class="fa-solid fa-map-location-dot me-1"></i>
+                                <span>Map Unavailable (No GPS Data)</span>
+                            </button>
+                        </div>
+                    @endif
                 </div>
             </div>
 
@@ -389,7 +443,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label fs-13 fw-semibold">Message Body *</label>
-                    <textarea class="form-control fs-13" rows="4" required placeholder="Type push message..." id="directNotifBody"></textarea>
+                    <textarea class="form-control fs-13" rows="4" style="min-height: 104px;" required placeholder="Type push message..." id="directNotifBody"></textarea>
                 </div>
                 <div class="mb-3">
                     <label class="form-label fs-13 fw-semibold">Deep Link URL / Action (Optional)</label>
@@ -456,7 +510,7 @@
 
                 <div class="mb-3">
                     <label class="form-label fs-13 fw-semibold text-dark">Admin Note (Optional)</label>
-                    <textarea name="admin_notes" class="form-control fs-13" rows="4" placeholder="Add an internal note" maxlength="500" id="inactiveNotesText" oninput="updateCharCount(this)"></textarea>
+                    <textarea name="admin_notes" class="form-control fs-13" rows="4" style="min-height: 104px;" placeholder="Add an internal note" maxlength="500" id="inactiveNotesText" oninput="updateCharCount(this)"></textarea>
                     <div class="text-end text-muted fs-11 mt-1" id="charCountLabel">0/500</div>
                 </div>
 
@@ -569,6 +623,48 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal 4: Device Full Map Modal (Interactive Leaflet Map) -->
+<div class="modal fade" id="deviceFullMapModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width: 820px;">
+        <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+            <div class="modal-header border-bottom px-4 py-3 bg-light d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-location-dot text-primary"></i>
+                        <span>{{ $device->city ?? $device->device_model }} GPS Location Map</span>
+                    </h5>
+                    <p class="text-muted fs-12 mb-0">{{ $device->full_location_formatted }} @if($device->coordinates_formatted)• <span class="fw-medium text-dark">{{ $device->coordinates_formatted }}</span>@endif</p>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-secondary active" id="btnModalTileOsm" onclick="setModalMapTile('osm')">Map</button>
+                        <button type="button" class="btn btn-outline-secondary" id="btnModalTileSat" onclick="setModalMapTile('sat')">Satellite</button>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="modal-body p-0 position-relative">
+                <div id="deviceModalLeafletMap" style="height: 480px; width: 100%;"></div>
+            </div>
+            <div class="modal-footer border-top px-4 py-2 bg-light d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-3 fs-12 text-muted">
+                    <span><i class="fa-solid fa-mobile-screen text-primary me-1"></i> {{ $device->device_model }}</span>
+                    <span><i class="fa-solid fa-fingerprint text-secondary me-1"></i> {{ $device->installation_id }}</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    @if($device->latitude && $device->longitude)
+                        <a href="https://www.openstreetmap.org/?mlat={{ $device->latitude }}&mlon={{ $device->longitude }}#map=16/{{ $device->latitude }}/{{ $device->longitude }}" target="_blank" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1">
+                            <span>OpenStreetMap</span>
+                            <i class="fa-solid fa-arrow-up-right-from-square fs-10"></i>
+                        </a>
+                    @endif
+                    <button type="button" class="btn btn-sm btn-primary px-3" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -711,6 +807,117 @@ function switchDetailTab(tabKey, btnEl) {
                 title: 'Viewing ' + tabKey.charAt(0).toUpperCase() + tabKey.slice(1) + ' telemetry logs'
             });
         }
+    }
+}
+
+@if($device->has_coordinates)
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.L && document.getElementById('deviceLeafletMap')) {
+        const lat = {{ (float) $device->latitude }};
+        const lng = {{ (float) $device->longitude }};
+        const map = L.map('deviceLeafletMap', {
+            center: [lat, lng],
+            zoom: 13,
+            zoomControl: false,
+            attributionControl: false,
+            scrollWheelZoom: false,
+            dragging: true,
+        });
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+        }).addTo(map);
+
+        const customIcon = L.divIcon({
+            className: 'custom-map-pin',
+            html: '<div class="map-leaflet-marker"><div class="pin-pulse"></div><i class="fa-solid fa-location-dot"></i></div>',
+            iconSize: [30, 30],
+            iconAnchor: [15, 28],
+            popupAnchor: [0, -28]
+        });
+
+        const marker = L.marker([lat, lng], { icon: customIcon }).addTo(map);
+        marker.bindPopup('<b>{{ addslashes($device->city ?? $device->device_model) }}</b><br><span style="font-size: 11px; color: #64748b;">' + lat.toFixed(6) + ', ' + lng.toFixed(6) + '</span>');
+
+        setTimeout(function() {
+            map.invalidateSize();
+        }, 300);
+    }
+});
+@endif
+
+let deviceModalMap = null;
+let modalOsmLayer = null;
+let modalSatLayer = null;
+
+function openDeviceFullMapModal() {
+    const modalEl = document.getElementById('deviceFullMapModal');
+    if (!modalEl || !window.bootstrap) return;
+
+    const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    bsModal.show();
+
+    modalEl.addEventListener('shown.bs.modal', function onModalOpen() {
+        modalEl.removeEventListener('shown.bs.modal', onModalOpen);
+
+        if (window.L && document.getElementById('deviceModalLeafletMap')) {
+            const lat = {{ (float) ($device->latitude ?? 13.0827) }};
+            const lng = {{ (float) ($device->longitude ?? 80.2707) }};
+
+            if (!deviceModalMap) {
+                deviceModalMap = L.map('deviceModalLeafletMap', {
+                    center: [lat, lng],
+                    zoom: 14,
+                    zoomControl: true,
+                    scrollWheelZoom: true,
+                });
+
+                modalOsmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors',
+                    maxZoom: 19,
+                }).addTo(deviceModalMap);
+
+                modalSatLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    attribution: '&copy; Esri, Maxar, Earthstar Geographics',
+                    maxZoom: 19,
+                });
+
+                const customIcon = L.divIcon({
+                    className: 'custom-map-pin',
+                    html: '<div class="map-leaflet-marker"><div class="pin-pulse"></div><i class="fa-solid fa-location-dot"></i></div>',
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 28],
+                    popupAnchor: [0, -28]
+                });
+
+                const marker = L.marker([lat, lng], { icon: customIcon }).addTo(deviceModalMap);
+                marker.bindPopup('<b>{{ addslashes($device->city ?? $device->device_model) }}</b><br><span style="font-size: 11px; color: #64748b;">' + lat.toFixed(6) + ', ' + lng.toFixed(6) + '</span><br><span class="badge bg-primary text-white mt-1">{{ $device->installation_id }}</span>').openPopup();
+            } else {
+                deviceModalMap.setView([lat, lng], 14);
+            }
+
+            setTimeout(function() {
+                deviceModalMap.invalidateSize();
+            }, 250);
+        }
+    });
+}
+
+function setModalMapTile(type) {
+    if (!deviceModalMap) return;
+    const btnOsm = document.getElementById('btnModalTileOsm');
+    const btnSat = document.getElementById('btnModalTileSat');
+
+    if (type === 'sat') {
+        if (modalOsmLayer) deviceModalMap.removeLayer(modalOsmLayer);
+        if (modalSatLayer) deviceModalMap.addLayer(modalSatLayer);
+        btnOsm?.classList.remove('active');
+        btnSat?.classList.add('active');
+    } else {
+        if (modalSatLayer) deviceModalMap.removeLayer(modalSatLayer);
+        if (modalOsmLayer) deviceModalMap.addLayer(modalOsmLayer);
+        btnSat?.classList.remove('active');
+        btnOsm?.classList.add('active');
     }
 }
 </script>

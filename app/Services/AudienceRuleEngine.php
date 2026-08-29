@@ -49,11 +49,25 @@ class AudienceRuleEngine
         if (!empty($platformFilters)) {
             // Platforms checkbox (Android, iOS)
             if (!empty($platformFilters['platforms']) && is_array($platformFilters['platforms'])) {
-                $platforms = array_map('ucfirst', $platformFilters['platforms']);
-                // Filter out 'Web' if not in DB enum, or match Android/iOS
-                $validPlatforms = array_intersect($platforms, ['Android', 'iOS', 'android', 'ios']);
-                if (count($validPlatforms) > 0 && count($validPlatforms) < 2) {
-                    $query->whereIn('platform', $validPlatforms);
+                $rawPlatforms = $platformFilters['platforms'];
+                $hasAndroid = false;
+                $hasIos = false;
+                foreach ($rawPlatforms as $p) {
+                    if (strcasecmp((string)$p, 'android') === 0) $hasAndroid = true;
+                    if (strcasecmp((string)$p, 'ios') === 0) $hasIos = true;
+                }
+
+                if ($hasAndroid && !$hasIos) {
+                    $query->where(function ($q) {
+                        $q->where('platform', 'Android')
+                          ->orWhere('platform', 'android');
+                    });
+                } elseif ($hasIos && !$hasAndroid) {
+                    $query->where(function ($q) {
+                        $q->where('platform', 'iOS')
+                          ->orWhere('platform', 'ios')
+                          ->orWhere('platform', 'Ios');
+                    });
                 }
             }
 
@@ -95,7 +109,7 @@ class AudienceRuleEngine
 
             // Exclude notification denied / opted out
             if (!empty($exclusions['exclude_notification_denied']) || !empty($exclusions['exclude_opted_out'])) {
-                $query->where('notification_status', 'Enabled');
+                $query->whereIn('notification_status', ['Enabled', 'enabled']);
             }
 
             // Exclude blacklisted / test devices
@@ -147,7 +161,12 @@ class AudienceRuleEngine
             case 'manufacturer':
             case 'devicemanufacturer':
             case 'brand':
-                $this->applyStringCondition($query, 'device_manufacturer', $op, $value);
+            case 'devicebrand':
+                $query->where(function ($q) use ($op, $value) {
+                    $this->applyStringCondition($q, 'device_brand', $op, $value);
+                })->orWhere(function ($q) use ($op, $value) {
+                    $this->applyStringCondition($q, 'device_manufacturer', $op, $value);
+                });
                 break;
 
             case 'devicemodel':
@@ -198,9 +217,9 @@ class AudienceRuleEngine
             case 'notificationpermission':
             case 'notificationstatus':
                 if (in_array(strtolower($value), ['enabled', 'granted', 'active'])) {
-                    $op === 'is not' ? $query->where('notification_status', '!=', 'Enabled') : $query->where('notification_status', 'Enabled');
+                    $op === 'is not' ? $query->whereNotIn('notification_status', ['Enabled', 'enabled']) : $query->whereIn('notification_status', ['Enabled', 'enabled']);
                 } else {
-                    $op === 'is not' ? $query->where('notification_status', 'Enabled') : $query->where('notification_status', '!=', 'Enabled');
+                    $op === 'is not' ? $query->whereIn('notification_status', ['Enabled', 'enabled']) : $query->whereNotIn('notification_status', ['Enabled', 'enabled']);
                 }
                 break;
 
@@ -257,7 +276,7 @@ class AudienceRuleEngine
     }
 
     /**
-     * Apply string condition (is, is not, is any of, contains).
+     * Apply string condition (is, is not, is any of, contains) with cross-database case insensitivity.
      */
     protected function applyStringCondition(Builder $query, string $column, string $operator, mixed $value): void
     {
@@ -265,13 +284,17 @@ class AudienceRuleEngine
             case 'is not':
             case 'not':
             case '!=':
-                $query->where($column, '!=', $value);
+                $query->whereRaw("LOWER({$column}) != LOWER(?)", [(string)$value]);
                 break;
 
             case 'is any of':
             case 'in':
                 $values = is_array($value) ? $value : array_map('trim', explode(',', (string)$value));
-                $query->whereIn($column, $values);
+                $query->where(function ($q) use ($column, $values) {
+                    foreach ($values as $v) {
+                        $q->orWhereRaw("LOWER({$column}) = LOWER(?)", [trim($v)]);
+                    }
+                });
                 break;
 
             case 'contains':
@@ -282,7 +305,7 @@ class AudienceRuleEngine
             case 'is':
             case '=':
             default:
-                $query->where($column, $value);
+                $query->whereRaw("LOWER({$column}) = LOWER(?)", [(string)$value]);
                 break;
         }
     }
@@ -470,13 +493,17 @@ class AudienceRuleEngine
             $criteriaSummary[] = implode(' + ', array_map('ucfirst', $platformFilters['platforms']));
         }
 
+        $activeCount = $matchingDevices->where('is_active', true)->count();
+        $notifEnabledCount = $matchingDevices->where('notification_status', 'Enabled')->count();
+        $anonUsersCount = $matchingDevices->whereNull('user_id')->count() ?: $eligibleCount;
+
         return [
-            'eligible_devices'        => $eligibleCount ?: min($totalDevices, 7054),
-            'deliverable_devices'     => $deliverableCount ?: min($totalDevices, 6842),
-            'excluded_devices'        => $excludedCount ?: 212,
-            'anonymous_users'         => $eligibleCount ?: min($totalDevices, 6488),
-            'active_devices'          => $eligibleCount ?: min($totalDevices, 7054),
-            'notifications_enabled'   => $deliverableCount ?: min($totalDevices, 6842),
+            'eligible_devices'        => $eligibleCount,
+            'deliverable_devices'     => $deliverableCount,
+            'excluded_devices'        => $excludedCount,
+            'anonymous_users'         => $anonUsersCount,
+            'active_devices'          => $activeCount,
+            'notifications_enabled'   => $notifEnabledCount,
             'android_count'           => $androidCount,
             'ios_count'               => $iosCount,
             'android_pct'             => $androidPct,

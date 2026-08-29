@@ -77,7 +77,6 @@
   border-radius: $radius-md;
   color: $text-body;
   transition: all $transition-fast;
-  height: 42px;
   padding: 8px 14px;
   font-size: $tx-sm2;
   line-height: 1.5;
@@ -92,6 +91,21 @@
     box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.12);
     outline: none;
   }
+}
+
+input.form-control,
+select.form-control,
+.form-select {
+  height: 42px;
+}
+
+textarea.form-control,
+textarea {
+  height: auto;
+  min-height: 104px;
+  line-height: 1.5;
+  padding: 10px 14px;
+  resize: vertical;
 }
 
 .form-control {

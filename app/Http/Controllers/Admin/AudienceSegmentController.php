@@ -35,7 +35,9 @@ class AudienceSegmentController extends Controller
      */
     public function create(Request $request): View
     {
-        $filterOptions = $this->segmentService->getFilterOptions();
+        $filterOptions     = $this->segmentService->getFilterOptions();
+        $ruleOptions       = $this->segmentService->getRuleOptions();
+        $locationHierarchy = $this->segmentService->getLocationHierarchy();
 
         // Optional prefilled location
         $prefill = [
@@ -59,7 +61,7 @@ class AudienceSegmentController extends Controller
             ],
         ]);
 
-        return view('admin.segments.create', compact('filterOptions', 'prefill', 'initialEstimate'));
+        return view('admin.segments.create', compact('filterOptions', 'ruleOptions', 'locationHierarchy', 'prefill', 'initialEstimate'));
     }
 
     /**
@@ -120,14 +122,16 @@ class AudienceSegmentController extends Controller
     public function edit(int $id): View
     {
         $segment = AudienceSegment::findOrFail($id);
-        $filterOptions = $this->segmentService->getFilterOptions();
+        $filterOptions     = $this->segmentService->getFilterOptions();
+        $ruleOptions       = $this->segmentService->getRuleOptions();
+        $locationHierarchy = $this->segmentService->getLocationHierarchy();
         $estimate = $this->ruleEngine->evaluateCriteria(
             $segment->rule_groups ?? [],
             $segment->platform_filters,
             $segment->exclusions
         );
 
-        return view('admin.segments.edit', compact('segment', 'filterOptions', 'estimate'));
+        return view('admin.segments.edit', compact('segment', 'filterOptions', 'ruleOptions', 'locationHierarchy', 'estimate'));
     }
 
     /**

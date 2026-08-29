@@ -210,7 +210,7 @@ class FirebaseSettingService
      * @param  array<string, string>  $data
      * @return array<string, mixed>
      */
-    public function sendPushNotification(string $deviceToken, string $title, string $body, array $data = []): array
+    public function sendPushNotification(string $deviceToken, string $title, string $body, array $data = [], ?string $imageUrl = null): array
     {
         $setting = $this->getActiveSetting();
         if (!$setting) {
@@ -230,16 +230,51 @@ class FirebaseSettingService
 
         $url = "https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send";
 
+        $notification = [
+            'title' => $title,
+            'body'  => $body,
+        ];
+
+        if (!empty($imageUrl)) {
+            $notification['image'] = $imageUrl;
+        }
+
         $message = [
             'token' => $deviceToken,
-            'notification' => [
-                'title' => $title,
-                'body'  => $body,
+            'notification' => $notification,
+            'android' => [
+                'priority' => 'HIGH',
+                'notification' => [
+                    'sound' => 'default',
+                    'default_sound' => true,
+                    'default_vibrate_timings' => true,
+                ],
+            ],
+            'apns' => [
+                'payload' => [
+                    'aps' => [
+                        'sound' => 'default',
+                        'badge' => 1,
+                        'mutable-content' => 1,
+                    ],
+                ],
             ],
         ];
 
+        if (!empty($imageUrl)) {
+            $message['android']['notification']['image'] = (string) $imageUrl;
+            $message['apns']['fcm_options'] = ['image' => (string) $imageUrl];
+        }
+
         if (!empty($data)) {
             $message['data'] = array_map('strval', $data);
+            if (!empty($imageUrl) && !isset($message['data']['image_url'])) {
+                $message['data']['image_url'] = (string) $imageUrl;
+            }
+        } elseif (!empty($imageUrl)) {
+            $message['data'] = [
+                'image_url' => (string) $imageUrl,
+            ];
         }
 
         $payload = [

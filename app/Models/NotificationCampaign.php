@@ -20,6 +20,8 @@ class NotificationCampaign extends Model
         'message',
         'action',
         'action_url',
+        'image_url',
+        'custom_payload',
         'audience_type',
         'audience_label',
         'segment_id',
@@ -84,16 +86,18 @@ class NotificationCampaign extends Model
      */
     public function getDeliveryFormattedAttribute(): string
     {
+        $tz = $this->time_zone ?: 'Asia/Kolkata';
+
         if ($this->status === 'sent' && $this->sent_at) {
-            return 'Sent ' . $this->sent_at->format('d M Y, h:i A');
+            return 'Sent ' . $this->sent_at->timezone($tz)->format('d M Y, h:i A');
         }
 
         if ($this->status === 'scheduled' && $this->scheduled_at) {
-            return $this->scheduled_at->format('d M Y, h:i A');
+            return $this->scheduled_at->timezone($tz)->format('d M Y, h:i A');
         }
 
         if ($this->status === 'failed' && $this->sent_at) {
-            return 'Sent ' . $this->sent_at->format('d M Y, h:i A');
+            return 'Sent ' . $this->sent_at->timezone($tz)->format('d M Y, h:i A');
         }
 
         return 'Not scheduled';

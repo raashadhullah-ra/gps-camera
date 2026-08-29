@@ -330,7 +330,11 @@
                             <!-- 6. Location (Without flag) -->
                             <td>
                                 <div class="location-cell">
-                                    <span>{{ $device->location_formatted }}</span>
+                                    @if($device->has_location)
+                                        <span>{{ $device->location_formatted }}</span>
+                                    @else
+                                        <span class="text-muted fs-12 fst-italic">Unavailable</span>
+                                    @endif
                                 </div>
                             </td>
 
@@ -617,7 +621,7 @@
 
                     <div class="mb-3">
                         <label class="form-label fw-semibold text-dark fs-13">Message Body *</label>
-                        <textarea class="form-control fs-13" rows="4" placeholder="Upgrade your GeoCam photos with our new real-time altitude & map stamp..." required id="notifBody"></textarea>
+                        <textarea class="form-control fs-13" rows="4" style="min-height: 104px;" placeholder="Upgrade your GeoCam photos with our new real-time altitude & map stamp..." required id="notifBody"></textarea>
                     </div>
 
                     <div class="mb-3">
@@ -687,7 +691,7 @@
 
                 <div class="mb-3">
                     <label class="form-label fs-13 fw-semibold text-dark">Admin Note (Optional)</label>
-                    <textarea name="admin_notes" class="form-control fs-13" rows="4" placeholder="Add an internal note" maxlength="500" id="inactiveNotesTextIndex" oninput="updateCharCountIndex(this)"></textarea>
+                    <textarea name="admin_notes" class="form-control fs-13" rows="4" style="min-height: 104px;" placeholder="Add an internal note" maxlength="500" id="inactiveNotesTextIndex" oninput="updateCharCountIndex(this)"></textarea>
                     <div class="text-end text-muted fs-11 mt-1" id="charCountLabelIndex">0/500</div>
                 </div>
 

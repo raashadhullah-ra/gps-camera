@@ -262,9 +262,12 @@
                                 <input type="checkbox" class="form-check-input notification-row-checkbox" value="{{ $camp->id }}">
                             </td>
                             <td>
-                                <a href="{{ route('admin.notifications.show', $camp->id) }}" class="campaign-title-text">
-                                    {{ $camp->title }}
+                                <a href="{{ route('admin.notifications.show', $camp->id) }}" class="campaign-title-text fw-bold text-dark text-decoration-none">
+                                    {{ $camp->name ?: $camp->title }}
                                 </a>
+                                @if($camp->name && $camp->title && $camp->name !== $camp->title)
+                                    <div class="fs-11 text-muted">{{ $camp->title }}</div>
+                                @endif
                             </td>
                             <td class="text-muted">
                                 {{ $camp->audience_label ?: ($camp->audience_type === 'individual' ? 'Individual Devices • ' . $camp->total_audience : 'All Eligible Installations') }}
@@ -304,14 +307,14 @@
                                         <i class="fa-solid fa-ellipsis-vertical"></i>
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end notification-dropdown-menu">
-                                        <li class="dropdown-header-campaign">{{ $camp->title }}</li>
+                                        <li class="dropdown-header-campaign">{{ $camp->name ?: $camp->title }}</li>
                                         <li>
                                             <a class="dropdown-item" href="{{ route('admin.notifications.show', $camp->id) }}">
                                                 <i class="fa-regular fa-eye text-muted"></i> View Details
                                             </a>
                                         </li>
                                         <li>
-                                            <a class="dropdown-item" href="{{ route('admin.locations.send-notification-global') }}">
+                                            <a class="dropdown-item" href="{{ route('admin.notifications.edit', $camp->id) }}">
                                                 <i class="fa-solid fa-pen text-muted"></i> Edit Notification
                                             </a>
                                         </li>
@@ -463,27 +466,33 @@
                                             <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body modal-body-custom">
+                                            @php
+                                                $reschedTz = $camp->time_zone ?: 'Asia/Kolkata';
+                                                $localSched = $camp->scheduled_at ? $camp->scheduled_at->timezone($reschedTz) : null;
+                                            @endphp
                                             {{-- Current Schedule Alert --}}
                                             <div class="alert-blue-light">
                                                 <i class="fa-regular fa-calendar-days text-primary"></i>
-                                                <span>Current schedule: {{ $camp->scheduled_at?->format('d M Y \a\t h:i A') ?? '26 Aug 2026 at 10:30 AM' }} IST</span>
+                                                <span>Current schedule: {{ $localSched ? $localSched->format('d M Y \a\t h:i A') . ' ' . ($reschedTz === 'Asia/Kolkata' ? 'IST' : $reschedTz) : 'Not scheduled' }}</span>
                                             </div>
 
                                             <div class="row g-2 mb-3">
                                                 <div class="col-4">
                                                     <label class="form-label fw-bold text-dark mb-1">New Delivery Date</label>
-                                                    <input type="date" name="delivery_date" class="form-control form-control-sm" value="{{ $camp->scheduled_at ? $camp->scheduled_at->addDays(2)->format('Y-m-d') : date('Y-m-d') }}" required>
+                                                    <input type="date" name="delivery_date" class="form-control form-control-sm" value="{{ $localSched ? $localSched->format('Y-m-d') : date('Y-m-d') }}" required>
                                                 </div>
                                                 <div class="col-4">
                                                     <label class="form-label fw-bold text-dark mb-1">New Delivery Time</label>
-                                                    <input type="time" name="delivery_time" class="form-control form-control-sm" value="{{ $camp->scheduled_at ? $camp->scheduled_at->format('H:i') : '09:00' }}" required>
+                                                    <input type="time" name="delivery_time" class="form-control form-control-sm" value="{{ $localSched ? $localSched->format('H:i') : '09:00' }}" required>
                                                 </div>
                                                 <div class="col-4">
                                                     <label class="form-label fw-bold text-dark mb-1">Time Zone</label>
                                                     <select name="time_zone" class="form-select form-select-sm">
-                                                        <option value="Asia/Kolkata" selected>(UTC+05:30) Asia/Kolkata</option>
-                                                        <option value="UTC">(UTC+00:00) UTC</option>
-                                                        <option value="America/New_York">(UTC-05:00) New York</option>
+                                                        <option value="Asia/Kolkata" {{ $reschedTz === 'Asia/Kolkata' ? 'selected' : '' }}>IST - India Standard Time (Asia/Kolkata, UTC+05:30)</option>
+                                                        <option value="Asia/Dubai" {{ $reschedTz === 'Asia/Dubai' ? 'selected' : '' }}>GST - Gulf Standard Time (Dubai/UAE, UTC+04:00)</option>
+                                                        <option value="UTC" {{ $reschedTz === 'UTC' ? 'selected' : '' }}>UTC - Universal Coordinated Time (UTC+00:00)</option>
+                                                        <option value="America/New_York" {{ $reschedTz === 'America/New_York' ? 'selected' : '' }}>EST - Eastern Standard Time (New York, UTC-05:00)</option>
+                                                        <option value="America/Los_Angeles" {{ $reschedTz === 'America/Los_Angeles' ? 'selected' : '' }}>PST - Pacific Standard Time (Los Angeles, UTC-08:00)</option>
                                                     </select>
                                                 </div>
                                             </div>
@@ -776,22 +785,92 @@
             </table>
         </div>
 
-        {{-- Table Footer & Pagination --}}
+        {{-- Table Footer & Custom Pagination --}}
         <div class="table-footer-pagination">
             <div>
                 Showing {{ $campaigns->firstItem() ?? 0 }} to {{ $campaigns->lastItem() ?? 0 }} of {{ number_format($campaigns->total()) }} campaigns
             </div>
             <div class="d-flex align-items-center gap-3">
                 <div class="d-flex align-items-center gap-2">
-                    <span>Per page:</span>
-                    <select name="per_page" class="form-select form-select-sm per-page-select" onchange="const form = document.getElementById('notificationsFilterForm'); const input = document.createElement('input'); input.type='hidden'; input.name='per_page'; input.value=this.value; form.appendChild(input); form.submit();">
+                    <span class="fs-12 text-muted">Per page:</span>
+                    <select name="per_page" class="form-select form-select-sm per-page-select" onchange="changePerPage(this.value)">
                         <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
-                        <option value="25" {{ request('per_page', 25) == 25 ? 'selected' : '' }}>25</option>
-                        <option value="50" {{ request('per_page', 50) == 50 ? 'selected' : '' }}>50</option>
+                        <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
+                        <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                        <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
                     </select>
                 </div>
-                <div>
-                    {{ $campaigns->links('pagination::bootstrap-5') }}
+
+                <!-- Custom Dynamic Pagination -->
+                <div class="custom-pagination">
+                    {{-- Previous Page Link --}}
+                    @if ($campaigns->onFirstPage())
+                        <button type="button" class="page-btn prev-btn" disabled aria-label="Previous Page">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                    @else
+                        <a href="{{ $campaigns->previousPageUrl() }}" class="page-btn prev-btn" aria-label="Previous Page">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </a>
+                    @endif
+
+                    {{-- Pagination Elements --}}
+                    @php
+                        $curPage = $campaigns->currentPage();
+                        $lastPage = $campaigns->lastPage();
+                    @endphp
+
+                    @if ($lastPage <= 7)
+                        @for ($page = 1; $page <= $lastPage; $page++)
+                            @if ($page == $curPage)
+                                <button type="button" class="page-btn page-num active">{{ $page }}</button>
+                            @else
+                                <a href="{{ $campaigns->url($page) }}" class="page-btn page-num">{{ $page }}</a>
+                            @endif
+                        @endfor
+                    @else
+                        {{-- 1st Page --}}
+                        @if ($curPage == 1)
+                            <button type="button" class="page-btn page-num active">1</button>
+                        @else
+                            <a href="{{ $campaigns->url(1) }}" class="page-btn page-num">1</a>
+                        @endif
+
+                        @if ($curPage > 3)
+                            <span class="page-ellipsis">...</span>
+                        @endif
+
+                        {{-- Middle Pages --}}
+                        @for ($page = max(2, $curPage - 1); $page <= min($lastPage - 1, $curPage + 1); $page++)
+                            @if ($page == $curPage)
+                                <button type="button" class="page-btn page-num active">{{ $page }}</button>
+                            @else
+                                <a href="{{ $campaigns->url($page) }}" class="page-btn page-num">{{ $page }}</a>
+                            @endif
+                        @endfor
+
+                        @if ($curPage < $lastPage - 2)
+                            <span class="page-ellipsis">...</span>
+                        @endif
+
+                        {{-- Last Page --}}
+                        @if ($curPage == $lastPage)
+                            <button type="button" class="page-btn page-num active">{{ $lastPage }}</button>
+                        @else
+                            <a href="{{ $campaigns->url($lastPage) }}" class="page-btn page-num">{{ $lastPage }}</a>
+                        @endif
+                    @endif
+
+                    {{-- Next Page Link --}}
+                    @if ($campaigns->hasMorePages())
+                        <a href="{{ $campaigns->nextPageUrl() }}" class="page-btn next-btn" aria-label="Next Page">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </a>
+                    @else
+                        <button type="button" class="page-btn next-btn" disabled aria-label="Next Page">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    @endif
                 </div>
             </div>
         </div>
@@ -801,6 +880,20 @@
 
 @push('scripts')
 <script>
+function changePerPage(perPage) {
+    const form = document.getElementById('notificationsFilterForm');
+    if (!form) return;
+    let input = form.querySelector('input[name="per_page"]');
+    if (!input) {
+        input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'per_page';
+        form.appendChild(input);
+    }
+    input.value = perPage;
+    form.submit();
+}
+
 function setFilterOption(field, value) {
     const input = document.getElementById('filter_' + field);
     const label = document.getElementById('label_' + field);
