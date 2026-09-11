@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AppVersionController;
 use App\Http\Controllers\Admin\AudienceSegmentController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\DeviceController;
@@ -168,7 +169,14 @@ Route::middleware(['auth'])->group(function () {
     });
  
 
-    // 10. Profile & Password Management (Available to all authenticated admins)
+    // 10. App Versions Management & Force Update
+    Route::prefix('admin/app-versions')->group(function () {
+        Route::middleware(['permission:app_versions.view'])->get('/', [AppVersionController::class, 'index'])->name('admin.app-versions.index');
+        Route::middleware(['permission:app_versions.edit'])->post('/update', [AppVersionController::class, 'update'])->name('admin.app-versions.update');
+        Route::middleware(['permission:app_versions.view'])->post('/test', [AppVersionController::class, 'testVersion'])->name('admin.app-versions.test');
+    });
+
+    // 11. Profile & Password Management (Available to all authenticated admins)
     Route::prefix('admin/profile')->group(function () {
         Route::get('/', [ProfileController::class, 'index'])->name('admin.profile');
         Route::post('/update', [ProfileController::class, 'update'])->name('admin.profile.update');
@@ -176,4 +184,5 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/change-password', [ProfileController::class, 'updatePassword'])->name('admin.profile.update-password');
     });
 });
+
 

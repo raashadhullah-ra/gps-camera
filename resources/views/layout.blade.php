@@ -104,8 +104,8 @@
                         </div>
                     @endif
                     @if(auth()->user()->canAccessModule('app_versions'))
-                        <div class="nav-item">
-                            <a href="#" class="nav-link">
+                        <div class="nav-item {{ request()->is('admin/app-versions*') || request()->routeIs('admin.app-versions.*') ? 'active' : '' }}">
+                            <a href="{{ route('admin.app-versions.index') }}" class="nav-link">
                                 <i class="fa-solid fa-cloud-arrow-up"></i>
                                 <span>App Versions</span>
                             </a>
