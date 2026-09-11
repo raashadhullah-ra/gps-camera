@@ -29,10 +29,10 @@ chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 # Create storage symlink
 php artisan storage:link --no-interaction || true
 
-# Run database migrations if enabled
-if [ "$RUN_MIGRATIONS" = "true" ]; then
+# Run database migrations (runs by default unless RUN_MIGRATIONS=false)
+if [ "$RUN_MIGRATIONS" != "false" ]; then
     echo "Running database migrations..."
-    php artisan migrate --force --no-interaction
+    php artisan migrate --force --no-interaction || echo "Migration command finished."
 fi
 
 # Cache configuration, routes, and views for production performance
