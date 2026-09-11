@@ -113,4 +113,37 @@ class User extends Authenticatable
             }
         });
     }
+
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'user_roles');
+    }
+
+    public function hasPermissionTo($permission)
+    {
+        if ($this->role === 'Super Admin' || $this->roles()->where('code', 'SUPER_ADMIN')->exists()) {
+            return true;
+        }
+
+        foreach ($this->roles as $role) {
+            if ($role->permissions()->where('name', $permission)->exists()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function canAccessModule($module)
+    {
+        if ($this->role === 'Super Admin' || $this->roles()->where('code', 'SUPER_ADMIN')->exists()) {
+            return true;
+        }
+
+        foreach ($this->roles as $role) {
+            if ($role->permissions()->where('module', $module)->exists()) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

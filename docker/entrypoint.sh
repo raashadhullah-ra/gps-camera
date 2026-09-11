@@ -1,43 +1,48 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
-echo "==> Starting GeoCam Deployment Setup..."
-
-# Configure Apache to listen on Render's dynamic PORT (defaults to 80 if not set)
+# Default to port 80 if PORT is not set
 PORT=${PORT:-80}
-echo "==> Configuring Apache to listen on port: $PORT"
-sed -i "s/80/$PORT/g" /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf
 
-# Ensure storage directories exist
-mkdir -p /var/www/html/storage/framework/{sessions,views,cache} /var/www/html/storage/logs
+echo "Configuring Apache to listen on port ${PORT}..."
+sed -i "s/Listen 80/Listen ${PORT}/g" /etc/apache2/ports.conf
+sed -i "s/:80/:${PORT}/g" /etc/apache2/sites-available/000-default.conf
+
+# Ensure SQLite database file exists if sqlite is used
+if [ "$DB_CONNECTION" = "sqlite" ] || [ -z "$DB_CONNECTION" ]; then
+    mkdir -p /var/www/html/database
+    touch /var/www/html/database/database.sqlite
+    chown -R www-data:www-data /var/www/html/database
+    chmod -R 775 /var/www/html/database
+fi
+
+# Ensure storage & bootstrap permissions
+mkdir -p /var/www/html/storage/framework/cache/data \
+         /var/www/html/storage/framework/sessions \
+         /var/www/html/storage/framework/views \
+         /var/www/html/storage/logs \
+         /var/www/html/bootstrap/cache
+
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# If SQLite is used, ensure the file exists
-if [ "$DB_CONNECTION" = "sqlite" ] && [ ! -f "$DB_DATABASE" ]; then
-    echo "==> Initializing SQLite database file..."
-    touch "${DB_DATABASE:-/var/www/html/database/database.sqlite}"
-    chown www-data:www-data "${DB_DATABASE:-/var/www/html/database/database.sqlite}"
+# Create storage symlink
+php artisan storage:link --no-interaction || true
+
+# Run database migrations if enabled
+if [ "$RUN_MIGRATIONS" = "true" ]; then
+    echo "Running database migrations..."
+    php artisan migrate --force --no-interaction
 fi
 
-# Ensure storage link exists
-echo "==> Linking storage directory..."
-php artisan storage:link --force || true
-
-# Production caches
-echo "==> Caching configuration, routes, and views..."
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-
-# Run database migrations
-echo "==> Running database migrations..."
-php artisan migrate --force
-
-# Optional: Run database seeders if explicitly requested via environment variable
-if [ "$RUN_SEEDS" = "true" ]; then
-    echo "==> Running database seeders..."
-    php artisan db:seed --force
+# Cache configuration, routes, and views for production performance
+if [ "$APP_ENV" = "production" ]; then
+    echo "Caching Laravel configuration and routes..."
+    php artisan config:cache || true
+    php artisan route:cache || true
+    php artisan view:cache || true
 fi
 
-echo "==> Starting Apache Server..."
+# Execute main process (Apache)
+echo "Starting Apache web server..."
 exec apache2-foreground

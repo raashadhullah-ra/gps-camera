@@ -18,14 +18,18 @@
             <p class="page-main-subtitle">Manage administrator accounts, roles, security and access</p>
         </div>
         <div class="header-actions-group">
-            <button type="button" class="btn btn-outline-primary" id="exportAdminsBtn">
-                <i class="fa-solid fa-download"></i>
-                <span>Export Admins</span>
-            </button>
-            <button type="button" class="btn btn-primary" id="addAdminBtn">
-                <i class="fa-solid fa-plus"></i>
-                <span>Add Admin</span>
-            </button>
+            @if(auth()->user()->hasPermissionTo('admins.export') || auth()->user()->hasPermissionTo('admins.view'))
+                <button type="button" class="btn btn-outline-primary" id="exportAdminsBtn">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Export Admins</span>
+                </button>
+            @endif
+            @if(auth()->user()->hasPermissionTo('admins.create'))
+                <a href="{{ route('admin.users.create') }}" class="btn btn-primary" id="addAdminBtn">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Add Admin</span>
+                </a>
+            @endif
         </div>
     </div>
 
@@ -193,8 +197,12 @@
                             <!-- 1. Administrator Info -->
                             <td>
                                 <div class="admin-user-cell">
-                                    <div class="admin-avatar {{ $avatarColorClass }}">
-                                        {{ $initials }}
+                                    <div class="admin-avatar {{ $avatarColorClass }} overflow-hidden">
+                                        @if($admin->avatar && file_exists(public_path($admin->avatar)))
+                                            <img src="{{ asset($admin->avatar) }}" alt="{{ $admin->name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                        @else
+                                            {{ $initials }}
+                                        @endif
                                     </div>
                                     <div class="admin-meta-info">
                                         <div class="admin-name">{{ $admin->name }}</div>
@@ -255,7 +263,7 @@
                                             <span>View Admin Details</span>
                                         </a>
 
-                                        <a href="{{ route('admin.profile') }}" class="action-menu-item">
+                                        <a href="{{ route('admin.users.edit', $admin->id) }}" class="action-menu-item">
                                             <i class="fa-solid fa-pen-to-square"></i>
                                             <span>Edit Administrator</span>
                                         </a>
@@ -265,16 +273,18 @@
                                             <span>View Permissions</span>
                                         </a>
 
-                                        @if($isSuperAdmin)
-                                            <span class="action-menu-item disabled" title="Super Admin role cannot be modified">
-                                                <i class="fa-solid fa-users-gear"></i>
-                                                <span>Assign Roles (Permanent)</span>
-                                            </span>
-                                        @else
-                                            <a href="javascript:void(0)" class="action-menu-item item-assign-roles" onclick="showInfoToast('Assign roles modal for {{ $admin->name }}')">
-                                                <i class="fa-solid fa-users-gear"></i>
-                                                <span>Assign Roles</span>
-                                            </a>
+                                        @if(auth()->user()->hasPermissionTo('admins.edit'))
+                                            @if($isSuperAdmin)
+                                                <span class="action-menu-item disabled" title="Super Admin role cannot be modified">
+                                                    <i class="fa-solid fa-users-gear"></i>
+                                                    <span>Assign Roles (Permanent)</span>
+                                                </span>
+                                            @else
+                                                <a href="{{ route('admin.users.edit', $admin->id) }}" class="action-menu-item item-assign-roles">
+                                                    <i class="fa-solid fa-users-gear"></i>
+                                                    <span>Assign Roles</span>
+                                                </a>
+                                            @endif
                                         @endif
 
                                         <a href="javascript:void(0)" class="action-menu-item" onclick="showInfoToast('Displaying login activity for {{ $admin->name }}')">
@@ -287,35 +297,37 @@
                                             <span>View Active Sessions</span>
                                         </a>
 
-                                        <div class="menu-divider"></div>
+                                        @if(auth()->user()->hasPermissionTo('admins.edit'))
+                                            <div class="menu-divider"></div>
 
-                                        <a href="javascript:void(0)" class="action-menu-item item-message" onclick="showInfoToast('Message composer opened for {{ $admin->email }}')">
-                                            <i class="fa-regular fa-paper-plane"></i>
-                                            <span>Send Message</span>
-                                        </a>
-
-                                        <a href="{{ route('admin.profile.change-password') }}" class="action-menu-item">
-                                            <i class="fa-solid fa-key"></i>
-                                            <span>Reset Password</span>
-                                        </a>
-
-                                        <a href="javascript:void(0)" class="action-menu-item" onclick="showSuccessToast('Password change required for {{ $admin->name }} at next login.')">
-                                            <i class="fa-solid fa-lock"></i>
-                                            <span>Require Password Change</span>
-                                        </a>
-
-                                        <div class="menu-divider"></div>
-
-                                        @if($isSuperAdmin)
-                                            <span class="action-menu-item disabled" title="Super Admin cannot be disabled">
-                                                <i class="fa-solid fa-circle-pause"></i>
-                                                <span>Disable Administrator (Protected)</span>
-                                            </span>
-                                        @else
-                                            <a href="javascript:void(0)" class="action-menu-item item-warning" onclick="toggleDisableDialog('{{ $admin->name }}', '{{ $admin->status_label }}')">
-                                                <i class="fa-solid fa-circle-pause"></i>
-                                                <span>{{ (int) $admin->status === \App\Models\User::STATUS_SUSPENDED ? 'Enable Administrator' : 'Disable Administrator' }}</span>
+                                            <a href="javascript:void(0)" class="action-menu-item item-message" onclick="showInfoToast('Message composer opened for {{ $admin->email }}')">
+                                                <i class="fa-regular fa-paper-plane"></i>
+                                                <span>Send Message</span>
                                             </a>
+
+                                            <a href="{{ route('admin.users.edit', $admin->id) }}" class="action-menu-item">
+                                                <i class="fa-solid fa-key"></i>
+                                                <span>Reset Password</span>
+                                            </a>
+
+                                            <a href="javascript:void(0)" class="action-menu-item" onclick="showSuccessToast('Password change required for {{ $admin->name }} at next login.')">
+                                                <i class="fa-solid fa-lock"></i>
+                                                <span>Require Password Change</span>
+                                            </a>
+
+                                            <div class="menu-divider"></div>
+
+                                            @if($isSuperAdmin)
+                                                <span class="action-menu-item disabled" title="Super Admin cannot be disabled">
+                                                    <i class="fa-solid fa-circle-pause"></i>
+                                                    <span>Disable Administrator (Protected)</span>
+                                                </span>
+                                            @else
+                                                <a href="javascript:void(0)" class="action-menu-item item-warning" onclick="toggleDisableDialog('{{ $admin->name }}', '{{ $admin->status_label }}')">
+                                                    <i class="fa-solid fa-circle-pause"></i>
+                                                    <span>{{ (int) $admin->status === \App\Models\User::STATUS_SUSPENDED ? 'Enable Administrator' : 'Disable Administrator' }}</span>
+                                                </a>
+                                            @endif
                                         @endif
 
                                         <div class="menu-divider"></div>
@@ -325,23 +337,27 @@
                                             <span>Copy Admin ID</span>
                                         </a>
 
-                                        <a href="javascript:void(0)" class="action-menu-item" onclick="showSuccessToast('Exporting data for {{ $adminId }}...')">
-                                            <i class="fa-solid fa-download"></i>
-                                            <span>Export Admin Data</span>
-                                        </a>
-
-                                        <div class="menu-divider"></div>
-
-                                        @if($isSuperAdmin)
-                                            <span class="action-menu-item disabled" title="Super Admin cannot be deleted">
-                                                <i class="fa-regular fa-trash-can"></i>
-                                                <span>Delete Administrator (Protected)</span>
-                                            </span>
-                                        @else
-                                            <a href="javascript:void(0)" class="action-menu-item item-danger" onclick="deleteAdminDialog('{{ $admin->name }}')">
-                                                <i class="fa-regular fa-trash-can"></i>
-                                                <span>Delete Administrator</span>
+                                        @if(auth()->user()->hasPermissionTo('admins.export') || auth()->user()->hasPermissionTo('admins.view'))
+                                            <a href="javascript:void(0)" class="action-menu-item" onclick="showSuccessToast('Exporting data for {{ $adminId }}...')">
+                                                <i class="fa-solid fa-download"></i>
+                                                <span>Export Admin Data</span>
                                             </a>
+                                        @endif
+
+                                        @if(auth()->user()->hasPermissionTo('admins.delete'))
+                                            <div class="menu-divider"></div>
+
+                                            @if($isSuperAdmin)
+                                                <span class="action-menu-item disabled" title="Super Admin cannot be deleted">
+                                                    <i class="fa-regular fa-trash-can"></i>
+                                                    <span>Delete Administrator (Protected)</span>
+                                                </span>
+                                            @else
+                                                <a href="javascript:void(0)" class="action-menu-item item-danger" onclick="deleteAdminDialog('{{ $admin->name }}', '{{ route('admin.users.destroy', $admin->id) }}')">
+                                                    <i class="fa-regular fa-trash-can"></i>
+                                                    <span>Delete Administrator</span>
+                                                </a>
+                                            @endif
                                         @endif
                                     </div>
                                 </div>
@@ -413,14 +429,6 @@ document.addEventListener('DOMContentLoaded', function () {
     if (exportBtn) {
         exportBtn.addEventListener('click', function () {
             showSuccessToast('Administrator accounts list exported successfully (CSV).');
-        });
-    }
-
-    // 3. Add Admin Button
-    const addBtn = document.getElementById('addAdminBtn');
-    if (addBtn) {
-        addBtn.addEventListener('click', function () {
-            showInfoToast('Add Administrator dialog opened.');
         });
     }
 });
@@ -508,7 +516,7 @@ function toggleDisableDialog(name, status) {
     }
 }
 
-function deleteAdminDialog(name) {
+function deleteAdminDialog(name, deleteUrl) {
     if (window.Swal) {
         Swal.fire({
             title: 'Delete Administrator?',
@@ -523,7 +531,16 @@ function deleteAdminDialog(name) {
             }
         }).then((result) => {
             if (result.isConfirmed) {
-                showSuccessToast(`Administrator ${name} account removed.`);
+                let form = document.getElementById('globalDeleteAdminForm');
+                if (!form) {
+                    form = document.createElement('form');
+                    form.id = 'globalDeleteAdminForm';
+                    form.method = 'POST';
+                    form.innerHTML = `@csrf @method('DELETE')`;
+                    document.body.appendChild(form);
+                }
+                form.action = deleteUrl;
+                form.submit();
             }
         });
     }

@@ -13,6 +13,10 @@ import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 window.flatpickr = flatpickr;
 
+import Cropper from 'cropperjs';
+import 'cropperjs/dist/cropper.css';
+window.Cropper = (typeof Cropper === 'function') ? Cropper : (Cropper?.default || Cropper);
+
 // Leaflet & Heatmap (Bundled locally via npm leaflet & leaflet.heat)
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';

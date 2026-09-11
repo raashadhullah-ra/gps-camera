@@ -17,6 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
             guests: '/auth/login',
             users: '/admin',
         );
+        $middleware->alias([
+            'permission' => \App\Http\Middleware\CheckPermission::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

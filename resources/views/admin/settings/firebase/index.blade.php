@@ -19,15 +19,19 @@
         </div>
         <div class="d-flex align-items-center gap-2">
             @if($settings->isNotEmpty())
-                <a href="{{ route('admin.settings.firebase.edit', $settings->first()->id) }}" class="btn btn-primary d-inline-flex align-items-center gap-2">
-                    <i class="fa-solid fa-pen-to-square"></i>
-                    <span>Edit Project</span>
-                </a>
+                @if(auth()->user()->hasPermissionTo('firebase_settings.edit'))
+                    <a href="{{ route('admin.settings.firebase.edit', $settings->first()->id) }}" class="btn btn-primary d-inline-flex align-items-center gap-2">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                        <span>Edit Project</span>
+                    </a>
+                @endif
             @else
-                <a href="{{ route('admin.settings.firebase.create') }}" class="btn btn-primary d-inline-flex align-items-center gap-2">
-                    <i class="fa-solid fa-plus"></i>
-                    <span>Add Project</span>
-                </a>
+                @if(auth()->user()->hasPermissionTo('firebase_settings.create'))
+                    <a href="{{ route('admin.settings.firebase.create') }}" class="btn btn-primary d-inline-flex align-items-center gap-2">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Add Project</span>
+                    </a>
+                @endif
             @endif
         </div>
     </div>

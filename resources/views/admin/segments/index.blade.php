@@ -19,14 +19,18 @@
             <p class="page-main-subtitle">Create and manage reusable audiences for targeted notifications</p>
         </div>
         <div class="header-actions-group">
-            <a href="{{ route('admin.segments.export-all', request()->query()) }}" class="btn btn-outline-primary" id="exportSegmentsCsvBtn">
-                <i class="fa-solid fa-download"></i>
-                <span>Export CSV</span>
-            </a>
-            <a href="{{ route('admin.segments.create') }}" class="btn btn-primary" id="createSegmentBtn">
-                <i class="fa-solid fa-plus"></i>
-                <span>Create Segment</span>
-            </a>
+            @if(auth()->user()->hasPermissionTo('segments.export'))
+                <a href="{{ route('admin.segments.export-all', request()->query()) }}" class="btn btn-outline-primary" id="exportSegmentsCsvBtn">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Export CSV</span>
+                </a>
+            @endif
+            @if(auth()->user()->hasPermissionTo('segments.create'))
+                <a href="{{ route('admin.segments.create') }}" class="btn btn-primary" id="createSegmentBtn">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Create Segment</span>
+                </a>
+            @endif
         </div>
     </div>
 
@@ -346,78 +350,100 @@
                                                     <i class="fa-solid fa-users-viewfinder text-muted me-2"></i> View Audience
                                                 </a>
                                             </li>
-                                            <li>
-                                                <a class="dropdown-item py-1.5 text-primary" href="{{ route('admin.locations.send-notification-global', ['segment_id' => $segment->id]) }}">
-                                                    <i class="fa-solid fa-paper-plane text-primary me-2"></i> Send Notification
-                                                </a>
-                                            </li>
-                                            <li><hr class="dropdown-divider my-1"></li>
-                                            <li>
-                                                <a class="dropdown-item py-1.5" href="{{ route('admin.segments.edit', $segment->id) }}">
-                                                    <i class="fa-solid fa-pen text-muted me-2"></i> Edit Segment
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <button type="button" class="dropdown-item py-1.5" data-bs-toggle="modal" data-bs-target="#duplicateModal{{ $segment->id }}">
-                                                    <i class="fa-regular fa-copy text-muted me-2"></i> Duplicate Segment
-                                                </button>
-                                            </li>
-                                            <li>
-                                                <button type="button" class="dropdown-item py-1.5" data-bs-toggle="modal" data-bs-target="#refreshModal{{ $segment->id }}">
-                                                    <i class="fa-solid fa-rotate text-muted me-2"></i> Refresh Audience
-                                                </button>
-                                            </li>
+                                            @if(auth()->user()->hasPermissionTo('notifications.create'))
+                                                <li>
+                                                    <a class="dropdown-item py-1.5 text-primary" href="{{ route('admin.locations.send-notification-global', ['segment_id' => $segment->id]) }}">
+                                                        <i class="fa-solid fa-paper-plane text-primary me-2"></i> Send Notification
+                                                    </a>
+                                                </li>
+                                            @endif
+                                            @if(auth()->user()->hasPermissionTo('segments.edit') || auth()->user()->hasPermissionTo('segments.create') || auth()->user()->hasPermissionTo('segments.export'))
+                                                <li><hr class="dropdown-divider my-1"></li>
+                                            @endif
+                                            @if(auth()->user()->hasPermissionTo('segments.edit'))
+                                                <li>
+                                                    <a class="dropdown-item py-1.5" href="{{ route('admin.segments.edit', $segment->id) }}">
+                                                        <i class="fa-solid fa-pen text-muted me-2"></i> Edit Segment
+                                                    </a>
+                                                </li>
+                                            @endif
+                                            @if(auth()->user()->hasPermissionTo('segments.create'))
+                                                <li>
+                                                    <button type="button" class="dropdown-item py-1.5" data-bs-toggle="modal" data-bs-target="#duplicateModal{{ $segment->id }}">
+                                                        <i class="fa-regular fa-copy text-muted me-2"></i> Duplicate Segment
+                                                    </button>
+                                                </li>
+                                            @endif
+                                            @if(auth()->user()->hasPermissionTo('segments.edit'))
+                                                <li>
+                                                    <button type="button" class="dropdown-item py-1.5" data-bs-toggle="modal" data-bs-target="#refreshModal{{ $segment->id }}">
+                                                        <i class="fa-solid fa-rotate text-muted me-2"></i> Refresh Audience
+                                                    </button>
+                                                </li>
+                                            @endif
                                             <li>
                                                 <button type="button" class="dropdown-item py-1.5" onclick="navigator.clipboard.writeText('{{ $segment->segment_id }}'); showAppToast('Segment ID {{ $segment->segment_id }} copied to clipboard!');">
                                                     <i class="fa-regular fa-clone text-muted me-2"></i> Copy Segment ID
                                                 </button>
                                             </li>
-                                            <li>
-                                                <button type="button" class="dropdown-item py-1.5" data-bs-toggle="modal" data-bs-target="#exportModal{{ $segment->id }}">
-                                                    <i class="fa-solid fa-download text-muted me-2"></i> Export Segment Data
-                                                </button>
-                                            </li>
-                                            <li><hr class="dropdown-divider my-1"></li>
-                                            @if($segment->status === 'active')
+                                            @if(auth()->user()->hasPermissionTo('segments.export'))
                                                 <li>
-                                                    <button type="button" class="dropdown-item py-1.5 text-warning" data-bs-toggle="modal" data-bs-target="#pauseModal{{ $segment->id }}">
-                                                        <i class="fa-solid fa-pause me-2"></i> Pause Segment
+                                                    <button type="button" class="dropdown-item py-1.5" data-bs-toggle="modal" data-bs-target="#exportModal{{ $segment->id }}">
+                                                        <i class="fa-solid fa-download text-muted me-2"></i> Export Segment Data
                                                     </button>
-                                                </li>
-                                                <li>
-                                                    <button type="button" class="dropdown-item py-1.5 text-secondary" data-bs-toggle="modal" data-bs-target="#archiveModal{{ $segment->id }}">
-                                                        <i class="fa-solid fa-box-archive me-2"></i> Archive Segment
-                                                    </button>
-                                                </li>
-                                            @elseif($segment->status === 'paused')
-                                                <li>
-                                                    <form action="{{ route('admin.segments.resume', $segment->id) }}" method="POST">
-                                                        @csrf
-                                                        <button type="submit" class="dropdown-item py-1.5 text-success">
-                                                            <i class="fa-solid fa-play me-2"></i> Resume Segment
-                                                        </button>
-                                                    </form>
-                                                </li>
-                                                <li>
-                                                    <button type="button" class="dropdown-item py-1.5 text-secondary" data-bs-toggle="modal" data-bs-target="#archiveModal{{ $segment->id }}">
-                                                        <i class="fa-solid fa-box-archive me-2"></i> Archive Segment
-                                                    </button>
-                                                </li>
-                                            @elseif($segment->status === 'archived')
-                                                <li>
-                                                    <form action="{{ route('admin.segments.restore', $segment->id) }}" method="POST">
-                                                        @csrf
-                                                        <button type="submit" class="dropdown-item py-1.5 text-success">
-                                                            <i class="fa-solid fa-trash-can-arrow-up me-2"></i> Restore Segment
-                                                        </button>
-                                                    </form>
                                                 </li>
                                             @endif
-                                            <li>
-                                                <button type="button" class="dropdown-item py-1.5 text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $segment->id }}">
-                                                    <i class="fa-regular fa-trash-can me-2"></i> Delete Segment
-                                                </button>
-                                            </li>
+                                            @if(auth()->user()->hasPermissionTo('segments.edit') || auth()->user()->hasPermissionTo('segments.delete'))
+                                                <li><hr class="dropdown-divider my-1"></li>
+                                                @if($segment->status === 'active' && auth()->user()->hasPermissionTo('segments.edit'))
+                                                    <li>
+                                                        <button type="button" class="dropdown-item py-1.5 text-warning" data-bs-toggle="modal" data-bs-target="#pauseModal{{ $segment->id }}">
+                                                            <i class="fa-solid fa-pause me-2"></i> Pause Segment
+                                                        </button>
+                                                    </li>
+                                                @endif
+                                                @if($segment->status === 'active' && (auth()->user()->hasPermissionTo('segments.delete') || auth()->user()->hasPermissionTo('segments.edit')))
+                                                    <li>
+                                                        <button type="button" class="dropdown-item py-1.5 text-secondary" data-bs-toggle="modal" data-bs-target="#archiveModal{{ $segment->id }}">
+                                                            <i class="fa-solid fa-box-archive me-2"></i> Archive Segment
+                                                        </button>
+                                                    </li>
+                                                @endif
+                                                @if($segment->status === 'paused' && auth()->user()->hasPermissionTo('segments.edit'))
+                                                    <li>
+                                                        <form action="{{ route('admin.segments.resume', $segment->id) }}" method="POST">
+                                                            @csrf
+                                                            <button type="submit" class="dropdown-item py-1.5 text-success">
+                                                                <i class="fa-solid fa-play me-2"></i> Resume Segment
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                @endif
+                                                @if($segment->status === 'paused' && (auth()->user()->hasPermissionTo('segments.delete') || auth()->user()->hasPermissionTo('segments.edit')))
+                                                    <li>
+                                                        <button type="button" class="dropdown-item py-1.5 text-secondary" data-bs-toggle="modal" data-bs-target="#archiveModal{{ $segment->id }}">
+                                                            <i class="fa-solid fa-box-archive me-2"></i> Archive Segment
+                                                        </button>
+                                                    </li>
+                                                @endif
+                                                @if($segment->status === 'archived' && (auth()->user()->hasPermissionTo('segments.delete') || auth()->user()->hasPermissionTo('segments.edit')))
+                                                    <li>
+                                                        <form action="{{ route('admin.segments.restore', $segment->id) }}" method="POST">
+                                                            @csrf
+                                                            <button type="submit" class="dropdown-item py-1.5 text-success">
+                                                                <i class="fa-solid fa-trash-can-arrow-up me-2"></i> Restore Segment
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                @endif
+                                                @if(auth()->user()->hasPermissionTo('segments.delete'))
+                                                    <li>
+                                                        <button type="button" class="dropdown-item py-1.5 text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ $segment->id }}">
+                                                            <i class="fa-regular fa-trash-can me-2"></i> Delete Segment
+                                                        </button>
+                                                    </li>
+                                                @endif
+                                            @endif
                                         </ul>
                                     </div>
                                 </div>

@@ -1,83 +1,84 @@
-# ==========================================
-# Stage 1: Build Vite Frontend Assets
-# ==========================================
-FROM node:20-alpine AS frontend
+# ----------------------------------------------------
+# Multi-Stage Dockerfile for Laravel (PHP 8.2 + Apache) on Render
+# ----------------------------------------------------
+
+# Stage 1: Build Frontend Assets (Vite)
+FROM node:20-alpine AS node-builder
 WORKDIR /app
-
-# Install Node dependencies
-COPY package*.json ./
-RUN npm ci || npm install
-
-# Copy application assets and compile
+COPY package.json package-lock.json ./
+RUN npm ci
 COPY . .
 RUN npm run build
 
-# ==========================================
-# Stage 2: PHP 8.2 Production Web Server
-# ==========================================
+# Stage 2: Composer Dependencies
+FROM composer:2 AS composer-builder
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-scripts
+COPY . .
+RUN composer dump-autoload --optimize --no-dev
+
+# Stage 3: Production Runtime (PHP 8.2 Apache)
 FROM php:8.2-apache
 
-# Install Linux system dependencies and libraries
+# Install system dependencies & PHP extension development libraries
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    git \
-    curl \
     libpng-dev \
-    libjpeg-dev \
+    libjpeg62-turbo-dev \
     libfreetype6-dev \
     libzip-dev \
-    libsqlite3-dev \
-    libpq-dev \
     libicu-dev \
     libonig-dev \
-    zip \
+    libxml2-dev \
+    libsqlite3-dev \
+    libpq-dev \
+    curl \
+    git \
     unzip \
-    ca-certificates \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Configure & Install PHP extensions required by Laravel
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
         pdo \
         pdo_mysql \
         pdo_pgsql \
         pdo_sqlite \
-        gd \
+        mbstring \
         zip \
+        xml \
         bcmath \
+        gd \
         intl \
         opcache \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+        exif
 
-# Enable Apache URL rewrite module
+# Enable Apache mod_rewrite for Laravel routing
 RUN a2enmod rewrite
 
-# Copy Composer executable
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
-# Set working directory
+# Setup working directory
 WORKDIR /var/www/html
 
 # Copy application source code
-COPY . .
+COPY . /var/www/html
 
-# Copy compiled assets from Stage 1
-COPY --from=frontend /app/public/build ./public/build
+# Copy built vendor directory from Composer stage
+COPY --from=composer-builder /app/vendor /var/www/html/vendor
 
-# Install PHP dependencies without development packages
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Copy compiled frontend assets from Node stage
+COPY --from=node-builder /app/public/build /var/www/html/public/build
 
-# Setup Apache site configuration and Entrypoint
+# Copy Apache virtual host config and entrypoint script
 COPY docker/apache.conf /etc/apache2/sites-available/000-default.conf
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Fix Windows CRLF line endings if present and grant execution rights
-RUN sed -i 's/\r$//' /usr/local/bin/entrypoint.sh \
-    && chmod +x /usr/local/bin/entrypoint.sh
-
-# Configure file ownership and permissions for Laravel
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
+# Setup proper directory permissions
+RUN chown -R www-data:www-data /var/www/html /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Expose default HTTP port
+# Expose default port (Render overrides dynamically via $PORT)
 EXPOSE 80
 
-# Execute entrypoint
+# Run entrypoint script
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

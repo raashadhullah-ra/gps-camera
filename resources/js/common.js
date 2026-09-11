@@ -206,10 +206,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ----------------------------------------------------
-    // 2. Universal Password Eye Toggle
+    // 2. Universal Password Eye Toggle (Supports login.blade.php & custom inputs)
     // ----------------------------------------------------
     document.addEventListener('click', (e) => {
-        const toggleBtn = e.target.closest('.password-toggle-btn, .toggle-password, [data-toggle-password], .btn-toggle-password');
+        const toggleBtn = e.target.closest('.password-toggle-btn, .toggle-password, [data-toggle-password], .btn-toggle-password, .password-toggle-icon');
         if (!toggleBtn) return;
 
         e.preventDefault();
@@ -224,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 2. Look in closest input group or parent form container
         if (!inputEl) {
-            const container = toggleBtn.closest('.input-group, .position-relative, .form-group, .mb-3');
+            const container = toggleBtn.closest('.input-icon-group, .input-group, .position-relative, .form-group, .mb-3');
             if (container) {
                 inputEl = container.querySelector('input[type="password"], input[type="text"]');
             }
@@ -236,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
         inputEl.setAttribute('type', isPassword ? 'text' : 'password');
 
         // Toggle icon classes
-        const icon = toggleBtn.querySelector('i, svg');
+        const icon = toggleBtn.tagName.toLowerCase() === 'i' ? toggleBtn : toggleBtn.querySelector('i, svg');
         if (icon) {
             if (isPassword) {
                 icon.classList.remove('fa-eye');
@@ -247,6 +247,197 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+
+    /**
+     * Setup avatar image picker with validation (2MB, JPG/PNG) and Cropper.js modal
+     */
+    window.setupAvatarCropper = function (options = {}) {
+        const fileInput = document.getElementById(options.fileInputId || 'adminPhotoInput');
+        const previewImg = document.getElementById(options.previewImgId || 'avatarImagePreview');
+        const previewIcon = document.getElementById(options.previewIconId || 'avatarUploadIcon');
+        const summaryCircle = document.getElementById(options.summaryCircleId || 'summaryAvatarCircle');
+        const hiddenCroppedInput = document.getElementById(options.hiddenCroppedInputId || 'croppedPhotoInput');
+
+        if (!fileInput) return;
+
+        let cropperInstance = null;
+        const modalEl = document.getElementById('cropPhotoModal');
+        const imageToCrop = document.getElementById('imageToCrop');
+        const applyCropBtn = document.getElementById('applyCropBtn');
+
+        fileInput.addEventListener('change', function () {
+            const file = this.files && this.files[0];
+            if (!file) return;
+
+            // 1. Validation: Allowed MIME Types (JPG, PNG, WEBP)
+            const isImage = (file.type && file.type.startsWith('image/')) || /\.(jpe?g|png|webp)$/i.test(file.name);
+            if (!isImage) {
+                window.showToast('error', 'Invalid File Type', 'Please select a JPG or PNG image file.');
+                this.value = '';
+                return;
+            }
+
+            // 2. Validation: Max 2MB File Size (2 * 1024 * 1024 bytes)
+            const maxSizeBytes = 2 * 1024 * 1024;
+            if (file.size > maxSizeBytes) {
+                const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                window.showToast('error', 'File Too Large', `Image size is ${sizeMB}MB. Maximum allowed file size is 2MB.`);
+                this.value = '';
+                return;
+            }
+
+            // 3. Read image for Cropper Modal
+            const reader = new FileReader();
+            reader.onload = function (evt) {
+                const resultData = evt.target.result;
+
+                // Immediate preview fallback
+                if (previewImg) {
+                    previewImg.src = resultData;
+                    previewImg.style.display = 'block';
+                }
+                if (previewIcon) {
+                    previewIcon.style.display = 'none';
+                }
+                const avatarInitials = document.getElementById('avatarTextInitials');
+                if (avatarInitials) {
+                    avatarInitials.style.display = 'none';
+                }
+                if (summaryCircle) {
+                    summaryCircle.innerHTML = `<img src="${resultData}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+                }
+                if (hiddenCroppedInput) {
+                    hiddenCroppedInput.value = resultData;
+                }
+
+                if (imageToCrop) {
+                    imageToCrop.src = resultData;
+                }
+
+                // Show Cropper Modal
+                if (modalEl) {
+                    try {
+                        const bs = window.bootstrap || (typeof bootstrap !== 'undefined' ? bootstrap : null);
+                        if (bs && bs.Modal) {
+                            const modal = bs.Modal.getOrCreateInstance(modalEl);
+                            modal.show();
+                        } else {
+                            $(modalEl).modal('show');
+                        }
+                    } catch (e) {
+                        console.error('Error showing cropper modal:', e);
+                    }
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+
+        if (modalEl && imageToCrop) {
+            modalEl.addEventListener('shown.bs.modal', function () {
+                if (cropperInstance) {
+                    cropperInstance.destroy();
+                }
+                const CropperClass = window.Cropper || (typeof Cropper !== 'undefined' ? (Cropper.default || Cropper) : null);
+                if (CropperClass) {
+                    cropperInstance = new CropperClass(imageToCrop, {
+                        aspectRatio: 1,
+                        viewMode: 1,
+                        dragMode: 'move',
+                        autoCropArea: 0.9,
+                        responsive: true,
+                        restore: false,
+                        guides: true,
+                        center: true,
+                        highlight: false,
+                        cropBoxMovable: true,
+                        cropBoxResizable: true,
+                        toggleDragModeOnDblclick: false,
+                    });
+                }
+            });
+
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                if (cropperInstance) {
+                    cropperInstance.destroy();
+                    cropperInstance = null;
+                }
+            });
+
+            // Zoom In / Out / Rotate / Reset controls
+            document.getElementById('cropZoomInBtn')?.addEventListener('click', () => cropperInstance?.zoom(0.1));
+            document.getElementById('cropZoomOutBtn')?.addEventListener('click', () => cropperInstance?.zoom(-0.1));
+            document.getElementById('cropRotateLeftBtn')?.addEventListener('click', () => cropperInstance?.rotate(-90));
+            document.getElementById('cropRotateRightBtn')?.addEventListener('click', () => cropperInstance?.rotate(90));
+            document.getElementById('cropResetBtn')?.addEventListener('click', () => cropperInstance?.reset());
+
+            // Apply Crop
+            if (applyCropBtn) {
+                applyCropBtn.addEventListener('click', function () {
+                    if (cropperInstance) {
+                        const canvas = cropperInstance.getCroppedCanvas({
+                            width: 500,
+                            height: 500,
+                            imageSmoothingEnabled: true,
+                            imageSmoothingQuality: 'high',
+                        });
+
+                        if (canvas) {
+                            const croppedBase64 = canvas.toDataURL('image/jpeg', 0.92);
+
+                            if (previewImg) {
+                                previewImg.src = croppedBase64;
+                                previewImg.style.display = 'block';
+                            }
+                            if (previewIcon) {
+                                previewIcon.style.display = 'none';
+                            }
+                            const avatarInitials = document.getElementById('avatarTextInitials');
+                            if (avatarInitials) {
+                                avatarInitials.style.display = 'none';
+                            }
+
+                            if (summaryCircle) {
+                                summaryCircle.innerHTML = `<img src="${croppedBase64}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+                            }
+
+                            if (hiddenCroppedInput) {
+                                hiddenCroppedInput.value = croppedBase64;
+                            }
+                        }
+                    }
+
+                    try {
+                        const bs = window.bootstrap || (typeof bootstrap !== 'undefined' ? bootstrap : null);
+                        if (bs && bs.Modal) {
+                            const modal = bs.Modal.getInstance(modalEl);
+                            if (modal) modal.hide();
+                        }
+                    } catch (e) {}
+
+                    window.showToast('success', 'Photo Applied', 'Photo cropped & ready for save (500×500 px).');
+                });
+            }
+        }
+    };
+
+    // Auto initialize if admin photo input is found in the current page
+    function autoInitCropper() {
+        if (document.getElementById('adminPhotoInput')) {
+            window.setupAvatarCropper({
+                fileInputId: 'adminPhotoInput',
+                previewImgId: 'avatarImagePreview',
+                previewIconId: 'avatarUploadIcon',
+                summaryCircleId: 'summaryAvatarCircle',
+                hiddenCroppedInputId: 'croppedPhotoInput'
+            });
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', autoInitCropper);
+    } else {
+        autoInitCropper();
+    }
 
     // ----------------------------------------------------
     // 3. Universal Logout Modal Trigger

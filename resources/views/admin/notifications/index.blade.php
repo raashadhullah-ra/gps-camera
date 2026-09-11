@@ -18,12 +18,14 @@
             <h1 class="page-main-title">Notifications</h1>
             <p class="page-main-subtitle">Create, schedule and track push notification campaigns</p>
         </div>
-        <div class="header-actions-group">
-            <a href="{{ route('admin.notifications.create') }}" class="btn btn-primary">
-                <i class="fa-solid fa-plus"></i>
-                <span>Create Notification</span>
-            </a>
-        </div>
+        @if(auth()->user()->hasPermissionTo('notifications.create'))
+            <div class="header-actions-group">
+                <a href="{{ route('admin.notifications.create') }}" class="btn btn-primary">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Create Notification</span>
+                </a>
+            </div>
+        @endif
     </div>
 
     {{-- 2. 5 Top KPI Metric Cards --}}
@@ -212,10 +214,12 @@
     <div class="table-container-card">
         <div class="card-header-bar d-flex align-items-center justify-content-between">
             <h2 class="table-title">Notification Campaigns</h2>
-            <a href="{{ route('admin.notifications.export') }}" class="btn btn-outline-primary btn-sm">
-                <i class="fa-solid fa-arrow-up-from-bracket"></i>
-                <span>Export</span>
-            </a>
+            @if(auth()->user()->hasPermissionTo('notifications.export'))
+                <a href="{{ route('admin.notifications.export') }}" class="btn btn-outline-primary btn-sm">
+                    <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                    <span>Export</span>
+                </a>
+            @endif
         </div>
 
         {{-- Filter Tabs --}}
@@ -313,57 +317,73 @@
                                                 <i class="fa-regular fa-eye text-muted"></i> View Details
                                             </a>
                                         </li>
-                                        <li>
-                                            <a class="dropdown-item" href="{{ route('admin.notifications.edit', $camp->id) }}">
-                                                <i class="fa-solid fa-pen text-muted"></i> Edit Notification
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#duplicateNotificationModal{{ $camp->id }}">
-                                                <i class="fa-regular fa-copy text-muted"></i> Duplicate
-                                            </button>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item" href="{{ route('admin.segments.index') }}">
-                                                <i class="fa-solid fa-users text-muted"></i> View Audience
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#rescheduleNotificationModal{{ $camp->id }}">
-                                                <i class="fa-regular fa-calendar-days text-muted"></i> Reschedule
-                                            </button>
-                                        </li>
-                                        <li>
-                                            <button type="button" class="dropdown-item text-primary" data-bs-toggle="modal" data-bs-target="#sendNowNotificationModal{{ $camp->id }}">
-                                                <i class="fa-solid fa-paper-plane"></i> Send Now
-                                            </button>
-                                        </li>
+                                        @if(auth()->user()->hasPermissionTo('notifications.edit'))
+                                            <li>
+                                                <a class="dropdown-item" href="{{ route('admin.notifications.edit', $camp->id) }}">
+                                                    <i class="fa-solid fa-pen text-muted"></i> Edit Notification
+                                                </a>
+                                            </li>
+                                        @endif
+                                        @if(auth()->user()->hasPermissionTo('notifications.create'))
+                                            <li>
+                                                <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#duplicateNotificationModal{{ $camp->id }}">
+                                                    <i class="fa-regular fa-copy text-muted"></i> Duplicate
+                                                </button>
+                                            </li>
+                                        @endif
+                                        @if(auth()->user()->canAccessModule('segments'))
+                                            <li>
+                                                <a class="dropdown-item" href="{{ route('admin.segments.index') }}">
+                                                    <i class="fa-solid fa-users text-muted"></i> View Audience
+                                                </a>
+                                            </li>
+                                        @endif
+                                        @if(auth()->user()->hasPermissionTo('notifications.edit'))
+                                            <li>
+                                                <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#rescheduleNotificationModal{{ $camp->id }}">
+                                                    <i class="fa-regular fa-calendar-days text-muted"></i> Reschedule
+                                                </button>
+                                            </li>
+                                        @endif
+                                        @if(auth()->user()->hasPermissionTo('notifications.edit') || auth()->user()->hasPermissionTo('notifications.manage'))
+                                            <li>
+                                                <button type="button" class="dropdown-item text-primary" data-bs-toggle="modal" data-bs-target="#sendNowNotificationModal{{ $camp->id }}">
+                                                    <i class="fa-solid fa-paper-plane"></i> Send Now
+                                                </button>
+                                            </li>
+                                        @endif
                                         <li>
                                             <a class="dropdown-item" href="{{ route('admin.notifications.show', $camp->id) }}">
                                                 <i class="fa-solid fa-chart-simple text-muted"></i> Delivery Report
                                             </a>
                                         </li>
-                                        <li class="dropdown-divider my-1"></li>
-                                        @if($camp->status === 'scheduled')
-                                            <li>
-                                                <button type="button" class="dropdown-item text-warning" data-bs-toggle="modal" data-bs-target="#cancelScheduleModal{{ $camp->id }}">
-                                                    <i class="fa-regular fa-circle-xmark"></i> Cancel Schedule
-                                                </button>
-                                            </li>
+                                        @if(auth()->user()->hasPermissionTo('notifications.edit') || auth()->user()->hasPermissionTo('notifications.manage') || auth()->user()->hasPermissionTo('notifications.delete'))
+                                            <li class="dropdown-divider my-1"></li>
+                                            @if($camp->status === 'scheduled' && (auth()->user()->hasPermissionTo('notifications.edit') || auth()->user()->hasPermissionTo('notifications.manage')))
+                                                <li>
+                                                    <button type="button" class="dropdown-item text-warning" data-bs-toggle="modal" data-bs-target="#cancelScheduleModal{{ $camp->id }}">
+                                                        <i class="fa-regular fa-circle-xmark"></i> Cancel Schedule
+                                                    </button>
+                                                </li>
+                                            @endif
+                                            @if(auth()->user()->hasPermissionTo('notifications.edit') || auth()->user()->hasPermissionTo('notifications.manage'))
+                                                <li>
+                                                    <form action="{{ route('admin.notifications.archive', $camp->id) }}" method="POST">
+                                                        @csrf
+                                                        <button type="submit" class="dropdown-item">
+                                                            <i class="fa-solid fa-box-archive text-muted"></i> Archive
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            @endif
+                                            @if(auth()->user()->hasPermissionTo('notifications.delete'))
+                                                <li>
+                                                    <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#deleteNotificationModal{{ $camp->id }}">
+                                                        <i class="fa-regular fa-trash-can"></i> Delete Notification
+                                                    </button>
+                                                </li>
+                                            @endif
                                         @endif
-                                        <li>
-                                            <form action="{{ route('admin.notifications.archive', $camp->id) }}" method="POST">
-                                                @csrf
-                                                <button type="submit" class="dropdown-item">
-                                                    <i class="fa-solid fa-box-archive text-muted"></i> Archive
-                                                </button>
-                                            </form>
-                                        </li>
-                                        <li>
-                                            <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#deleteNotificationModal{{ $camp->id }}">
-                                                <i class="fa-regular fa-trash-can"></i> Delete Notification
-                                            </button>
-                                        </li>
                                     </ul>
                                 </div>
                             </td>

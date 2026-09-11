@@ -20,14 +20,18 @@
         </div>
 
         <div class="d-flex align-items-center gap-2">
-            <button type="button" class="btn btn-outline-primary d-inline-flex align-items-center gap-2" onclick="openExportAllModal('{{ number_format($metrics['countries']) }} Countries', '{{ number_format($metrics['cities']) }} Cities', '{{ number_format($metrics['total_db_users']) }}', '{{ number_format($metrics['total_db_devices']) }}', 'Active')">
-                <i class="fa-solid fa-download"></i>
-                <span>Export</span>
-            </button>
-            <a href="{{ route('admin.locations.send-notification-global') }}" class="btn btn-primary d-inline-flex align-items-center gap-2">
-                <i class="fa-solid fa-plus"></i>
-                <span>Send Notification</span>
-            </a>
+            @if(auth()->user()->hasPermissionTo('locations.export'))
+                <button type="button" class="btn btn-outline-primary d-inline-flex align-items-center gap-2" onclick="openExportAllModal('{{ number_format($metrics['countries']) }} Countries', '{{ number_format($metrics['cities']) }} Cities', '{{ number_format($metrics['total_db_users']) }}', '{{ number_format($metrics['total_db_devices']) }}', 'Active')">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Export</span>
+                </button>
+            @endif
+            @if(auth()->user()->hasPermissionTo('notifications.create'))
+                <a href="{{ route('admin.locations.send-notification-global') }}" class="btn btn-primary d-inline-flex align-items-center gap-2">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Send Notification</span>
+                </a>
+            @endif
         </div>
     </div>
 
@@ -361,28 +365,36 @@
                                                 <i class="fa-solid fa-chart-line text-success"></i> View Installation Trend
                                             </a>
                                         </li>
-                                        <li><hr class="dropdown-divider my-1"></li>
-                                        <li>
-                                            <a class="dropdown-item py-1 px-3 d-flex align-items-center gap-2 text-primary" href="{{ route('admin.locations.send-notification', $loc->id) }}">
-                                                <i class="fa-regular fa-bell"></i> Send Notification
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item py-1 px-3 d-flex align-items-center gap-2 text-purple" href="{{ route('admin.locations.create-segment', $loc->id) }}">
-                                                <i class="fa-solid fa-user-plus"></i> Create Audience Segment
-                                            </a>
-                                        </li>
+                                        @if(auth()->user()->hasPermissionTo('notifications.create') || auth()->user()->hasPermissionTo('segments.create'))
+                                            <li><hr class="dropdown-divider my-1"></li>
+                                            @if(auth()->user()->hasPermissionTo('notifications.create'))
+                                                <li>
+                                                    <a class="dropdown-item py-1 px-3 d-flex align-items-center gap-2 text-primary" href="{{ route('admin.locations.send-notification', $loc->id) }}">
+                                                        <i class="fa-regular fa-bell"></i> Send Notification
+                                                    </a>
+                                                </li>
+                                            @endif
+                                            @if(auth()->user()->hasPermissionTo('segments.create'))
+                                                <li>
+                                                    <a class="dropdown-item py-1 px-3 d-flex align-items-center gap-2 text-purple" href="{{ route('admin.locations.create-segment', $loc->id) }}">
+                                                        <i class="fa-solid fa-user-plus"></i> Create Audience Segment
+                                                    </a>
+                                                </li>
+                                            @endif
+                                        @endif
                                         <li><hr class="dropdown-divider my-1"></li>
                                         <li>
                                             <a class="dropdown-item py-1 px-3 d-flex align-items-center gap-2 text-muted" href="javascript:void(0)" onclick="copyLocationName('{{ $loc->city }}, {{ $loc->state }}, {{ $loc->country }}')">
                                                 <i class="fa-regular fa-copy"></i> Copy Location Name
                                             </a>
                                         </li>
-                                        <li>
-                                            <a class="dropdown-item py-1 px-3 d-flex align-items-center gap-2 text-muted" href="javascript:void(0)" onclick="openExportModal({{ $loc->id }}, '{{ addslashes($loc->city) }}', '{{ addslashes($loc->state) }}', '{{ addslashes($loc->country) }}', '{{ number_format($loc->anonymous_users_count) }}', '{{ number_format($loc->devices_count) }}', '{{ $loc->status }}')">
-                                                <i class="fa-solid fa-download"></i> Export Location Data
-                                            </a>
-                                        </li>
+                                        @if(auth()->user()->hasPermissionTo('locations.export'))
+                                            <li>
+                                                <a class="dropdown-item py-1 px-3 d-flex align-items-center gap-2 text-muted" href="javascript:void(0)" onclick="openExportModal({{ $loc->id }}, '{{ addslashes($loc->city) }}', '{{ addslashes($loc->state) }}', '{{ addslashes($loc->country) }}', '{{ number_format($loc->anonymous_users_count) }}', '{{ number_format($loc->devices_count) }}', '{{ $loc->status }}')">
+                                                    <i class="fa-solid fa-download"></i> Export Location Data
+                                                </a>
+                                            </li>
+                                        @endif
                                     </ul>
                                 </div>
                             </td>

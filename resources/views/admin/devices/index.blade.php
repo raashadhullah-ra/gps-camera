@@ -19,14 +19,18 @@
             <p class="page-main-subtitle">Monitor anonymous installations, device activity and notification availability</p>
         </div>
         <div class="header-actions-group">
-            <a href="{{ route('admin.devices.export') }}" class="btn btn-outline-primary" id="exportDevicesCsvBtn">
-                <i class="fa-solid fa-download"></i>
-                <span>Export CSV</span>
-            </a>
-            <button type="button" class="btn btn-primary" id="openSendNotificationModalBtn">
-                <i class="fa-solid fa-plus"></i>
-                <span>Send Notification</span>
-            </button>
+            @if(auth()->user()->hasPermissionTo('devices.export'))
+                <a href="{{ route('admin.devices.export') }}" class="btn btn-outline-primary" id="exportDevicesCsvBtn">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Export CSV</span>
+                </a>
+            @endif
+            @if(auth()->user()->hasPermissionTo('notifications.create'))
+                <button type="button" class="btn btn-primary" id="openSendNotificationModalBtn">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Send Notification</span>
+                </button>
+            @endif
         </div>
     </div>
 
@@ -421,10 +425,12 @@
                                                 <span>View Device Details</span>
                                             </a>
 
-                                            <a href="javascript:void(0)" class="action-menu-item" onclick="sendDirectNotification({{ $device->id }}, '{{ $device->installation_id }}', '{{ $device->device_model }}')">
-                                                <i class="fa-regular fa-bell"></i>
-                                                <span>Send Notification</span>
-                                            </a>
+                                            @if(auth()->user()->hasPermissionTo('notifications.create'))
+                                                <a href="javascript:void(0)" class="action-menu-item" onclick="sendDirectNotification({{ $device->id }}, '{{ $device->installation_id }}', '{{ $device->device_model }}')">
+                                                    <i class="fa-regular fa-bell"></i>
+                                                    <span>Send Notification</span>
+                                                </a>
+                                            @endif
 
                                             <a href="{{ route('admin.devices.show', $device->id) }}" class="action-menu-item">
                                                 <i class="fa-solid fa-clock-rotate-left"></i>
@@ -446,32 +452,40 @@
                                                 <span>Copy Installation ID</span>
                                             </a>
 
-                                            <a href="{{ route('admin.devices.export') }}" class="action-menu-item">
-                                                <i class="fa-solid fa-download"></i>
-                                                <span>Export Device Data</span>
-                                            </a>
-
-                                            <div class="menu-divider"></div>
-
-                                            @if($device->is_active)
-                                                <button type="button" class="action-menu-item item-warning border-0 bg-transparent w-100 text-start" onclick="triggerMarkInactiveModal('{{ $device->id }}', '{{ $device->installation_id }}', '{{ $device->device_model }}', '{{ $device->platform }} {{ $device->os_version }}', '{{ $device->location_formatted }}')">
-                                                    <i class="fa-solid fa-circle-pause"></i>
-                                                    <span>Mark as Inactive</span>
-                                                </button>
-                                            @else
-                                                <form action="{{ route('admin.devices.toggle-status', $device->id) }}" method="POST" class="m-0">
-                                                    @csrf
-                                                    <button type="submit" class="action-menu-item text-success border-0 bg-transparent w-100 text-start">
-                                                        <i class="fa-solid fa-circle-play"></i>
-                                                        <span>Reactivate Device</span>
-                                                    </button>
-                                                </form>
+                                            @if(auth()->user()->hasPermissionTo('devices.export'))
+                                                <a href="{{ route('admin.devices.export') }}" class="action-menu-item">
+                                                    <i class="fa-solid fa-download"></i>
+                                                    <span>Export Device Data</span>
+                                                </a>
                                             @endif
 
-                                            <button type="button" class="action-menu-item item-danger border-0 bg-transparent w-100 text-start" onclick="triggerDeleteModal('{{ $device->id }}', '{{ $device->installation_id }}', '{{ $device->device_model }}', '{{ $device->platform }} {{ $device->os_version }}', '{{ $device->location_formatted }}')">
-                                                <i class="fa-regular fa-trash-can"></i>
-                                                <span>Delete Device Record</span>
-                                            </button>
+                                            @if(auth()->user()->hasPermissionTo('devices.edit') || auth()->user()->hasPermissionTo('devices.delete'))
+                                                <div class="menu-divider"></div>
+
+                                                @if(auth()->user()->hasPermissionTo('devices.edit'))
+                                                    @if($device->is_active)
+                                                        <button type="button" class="action-menu-item item-warning border-0 bg-transparent w-100 text-start" onclick="triggerMarkInactiveModal('{{ $device->id }}', '{{ $device->installation_id }}', '{{ $device->device_model }}', '{{ $device->platform }} {{ $device->os_version }}', '{{ $device->location_formatted }}')">
+                                                            <i class="fa-solid fa-circle-pause"></i>
+                                                            <span>Mark as Inactive</span>
+                                                        </button>
+                                                    @else
+                                                        <form action="{{ route('admin.devices.toggle-status', $device->id) }}" method="POST" class="m-0">
+                                                            @csrf
+                                                            <button type="submit" class="action-menu-item text-success border-0 bg-transparent w-100 text-start">
+                                                                <i class="fa-solid fa-circle-play"></i>
+                                                                <span>Reactivate Device</span>
+                                                            </button>
+                                                        </form>
+                                                    @endif
+                                                @endif
+
+                                                @if(auth()->user()->hasPermissionTo('devices.delete'))
+                                                    <button type="button" class="action-menu-item item-danger border-0 bg-transparent w-100 text-start" onclick="triggerDeleteModal('{{ $device->id }}', '{{ $device->installation_id }}', '{{ $device->device_model }}', '{{ $device->platform }} {{ $device->os_version }}', '{{ $device->location_formatted }}')">
+                                                        <i class="fa-regular fa-trash-can"></i>
+                                                        <span>Delete Device Record</span>
+                                                    </button>
+                                                @endif
+                                            @endif
                                         </div>
                                     </div>
                                 </div>

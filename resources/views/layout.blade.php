@@ -26,106 +26,145 @@
             </div>
 
             <div class="sidebar-menu">
-                <div class="menu-header">OVERVIEW</div>
-                <div class="nav-item {{ request()->is('admin') ? 'active' : '' }}">
-                    <a href="{{ url('/admin') }}" class="nav-link">
-                        <i class="fa-solid fa-table-cells-large"></i>
-                        <span>Dashboard</span>
-                    </a>
-                </div>
+                @if(auth()->check() && auth()->user()->canAccessModule('dashboard'))
+                    <div class="menu-header">OVERVIEW</div>
+                    <div class="nav-item {{ request()->is('admin') ? 'active' : '' }}">
+                        <a href="{{ url('/admin') }}" class="nav-link">
+                            <i class="fa-solid fa-table-cells-large"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </div>
+                @endif
 
-                <div class="menu-header">INSTALLATIONS</div>
-                <div class="nav-item {{ request()->routeIs('admin.devices.*') ? 'active' : '' }}">
-                    <a href="{{ route('admin.devices.index') }}" class="nav-link">
-                        <i class="fa-solid fa-mobile-screen-button"></i>
-                        <span>Installed Devices</span>
-                    </a>
-                </div>
-                
-                <div class="nav-item {{ request()->routeIs('admin.locations.*') ? 'active' : '' }}">
-                    <a href="{{ route('admin.locations.index') }}" class="nav-link">
-                        <i class="fa-solid fa-location-dot"></i>
-                        <span>Locations</span>
-                    </a>
-                </div>
+                @if(auth()->check() && (auth()->user()->canAccessModule('devices') || auth()->user()->canAccessModule('locations')))
+                    <div class="menu-header">INSTALLATIONS</div>
+                    @if(auth()->user()->canAccessModule('devices'))
+                        <div class="nav-item {{ request()->routeIs('admin.devices.*') ? 'active' : '' }}">
+                            <a href="{{ route('admin.devices.index') }}" class="nav-link">
+                                <i class="fa-solid fa-mobile-screen-button"></i>
+                                <span>Installed Devices</span>
+                            </a>
+                        </div>
+                    @endif
+                    
+                    @if(auth()->user()->canAccessModule('locations'))
+                        <div class="nav-item {{ request()->routeIs('admin.locations.*') ? 'active' : '' }}">
+                            <a href="{{ route('admin.locations.index') }}" class="nav-link">
+                                <i class="fa-solid fa-location-dot"></i>
+                                <span>Locations</span>
+                            </a>
+                        </div>
+                    @endif
+                @endif
 
-                <div class="menu-header">ENGAGEMENT</div>
-                <div class="nav-item {{ request()->routeIs('admin.notifications.*') ? 'active' : '' }}">
-                    <a href="{{ route('admin.notifications.index') }}" class="nav-link">
-                        <i class="fa-solid fa-bell"></i>
-                        <span>Notifications</span>
-                    </a>
-                </div>
-                <div class="nav-item {{ request()->routeIs('admin.segments.*') ? 'active' : '' }}">
-                    <a href="{{ route('admin.segments.index') }}" class="nav-link">
-                        <i class="fa-solid fa-users"></i>
-                        <span>Audience Segments</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="fa-solid fa-chart-line"></i>
-                        <span>Analytics</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
-                        <span>Crash Reports</span>
-                    </a>
-                </div>
+                @if(auth()->check() && (auth()->user()->canAccessModule('notifications') || auth()->user()->canAccessModule('segments') || auth()->user()->canAccessModule('analytics') || auth()->user()->canAccessModule('crash_reports')))
+                    <div class="menu-header">ENGAGEMENT</div>
+                    @if(auth()->user()->canAccessModule('notifications'))
+                        <div class="nav-item {{ request()->routeIs('admin.notifications.*') ? 'active' : '' }}">
+                            <a href="{{ route('admin.notifications.index') }}" class="nav-link">
+                                <i class="fa-solid fa-bell"></i>
+                                <span>Notifications</span>
+                            </a>
+                        </div>
+                    @endif
+                    @if(auth()->user()->canAccessModule('segments'))
+                        <div class="nav-item {{ request()->routeIs('admin.segments.*') ? 'active' : '' }}">
+                            <a href="{{ route('admin.segments.index') }}" class="nav-link">
+                                <i class="fa-solid fa-users"></i>
+                                <span>Audience Segments</span>
+                            </a>
+                        </div>
+                    @endif
+                    @if(auth()->user()->canAccessModule('analytics'))
+                        <div class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="fa-solid fa-chart-line"></i>
+                                <span>Analytics</span>
+                            </a>
+                        </div>
+                    @endif
+                    @if(auth()->user()->canAccessModule('crash_reports'))
+                        <div class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                                <span>Crash Reports</span>
+                            </a>
+                        </div>
+                    @endif
+                @endif
 
-                <div class="menu-header">APP CONTROL</div>
-                <div class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="fa-solid fa-sliders"></i>
-                        <span>Remote Config</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="fa-solid fa-cloud-arrow-up"></i>
-                        <span>App Versions</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="fa-solid fa-rectangle-ad"></i>
-                        <span>Ads Management</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="fa-solid fa-shield-halved"></i>
-                        <span>Permissions</span>
-                    </a>
-                </div>
+                @if(auth()->check() && (auth()->user()->canAccessModule('remote_config') || auth()->user()->canAccessModule('app_versions') || auth()->user()->canAccessModule('ads')))
+                    <div class="menu-header">APP CONTROL</div>
+                    @if(auth()->user()->canAccessModule('remote_config'))
+                        <div class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="fa-solid fa-sliders"></i>
+                                <span>Remote Config</span>
+                            </a>
+                        </div>
+                    @endif
+                    @if(auth()->user()->canAccessModule('app_versions'))
+                        <div class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                                <span>App Versions</span>
+                            </a>
+                        </div>
+                    @endif
+                    @if(!auth()->check() || auth()->user()->canAccessModule('ads'))
+                        <div class="nav-item {{ request()->is('admin/ad-management*') || request()->is('ad-management*') || request()->routeIs('admin.ads.*') ? 'active' : '' }}">
+                            <a href="{{ route('admin.ads.index') }}" class="nav-link">
+                                <i class="fa-solid fa-rectangle-ad"></i>
+                                <span>Ads Management</span>
+                            </a>
+                        </div>
+                    @endif
+                @endif
 
-                <div class="menu-header">SYSTEM</div>
-                <div class="nav-item">
-                    <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
-                        <i class="fa-solid fa-user-gear"></i>
-                        <span>Admin Users</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="fa-solid fa-key"></i>
-                        <span>Roles & Access</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="{{ route('admin.settings.firebase.index') }}" class="nav-link {{ request()->routeIs('admin.settings.firebase.*') ? 'active' : '' }}">
-                        <i class="fa-solid fa-fire"></i>
-                        <span>Firebase Settings</span>
-                    </a>
-                </div>
-                <div class="nav-item">
-                    <a href="#" class="nav-link">
-                        <i class="fa-solid fa-gear"></i>
-                        <span>Settings</span>
-                    </a>
-                </div>
+                @if(auth()->check() && auth()->user()->canAccessModule('admins'))
+                    <div class="menu-header">ADMIN MANAGEMENT</div>
+                    <div class="nav-item {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                        <a href="{{ route('admin.users.index') }}" class="nav-link">
+                            <i class="fa-solid fa-users"></i>
+                            <span>Admin List</span>
+                        </a>
+                    </div>
+                @endif
+
+                @if(auth()->check() && (auth()->user()->canAccessModule('settings') || auth()->user()->canAccessModule('firebase_settings')))
+                    <div class="menu-header">SYSTEM SETTINGS</div>
+                    @if(auth()->user()->canAccessModule('settings'))
+                        <div class="nav-item has-submenu {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
+                            <a href="#rolesSubmenu" class="nav-link" data-bs-toggle="collapse" role="button" aria-expanded="{{ request()->routeIs('admin.roles.*') ? 'true' : 'false' }}" aria-controls="rolesSubmenu">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-key"></i>
+                                    <span>Roles & Permissions</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-down submenu-arrow"></i>
+                            </a>
+                            <div class="collapse {{ request()->routeIs('admin.roles.*') ? 'show' : '' }}" id="rolesSubmenu">
+                                <div class="nav-submenu">
+                                    <a href="{{ route('admin.roles.index') }}" class="sub-nav-link {{ request()->routeIs('admin.roles.index') || request()->routeIs('admin.roles.create') || request()->routeIs('admin.roles.edit') ? 'active' : '' }}">
+                                        <i class="fa-solid fa-list-check"></i>
+                                        <span>Roles List</span>
+                                    </a>
+                                    <a href="{{ route('admin.roles.permissions') }}" class="sub-nav-link {{ request()->routeIs('admin.roles.permissions') ? 'active' : '' }}">
+                                        <i class="fa-solid fa-shield-halved"></i>
+                                        <span>Assign Permissions</span>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                    @if(auth()->user()->canAccessModule('firebase_settings'))
+                        <div class="nav-item {{ request()->routeIs('admin.settings.firebase.*') ? 'active' : '' }}">
+                            <a href="{{ route('admin.settings.firebase.index') }}" class="nav-link">
+                                <i class="fa-solid fa-fire"></i>
+                                <span>Firebase Settings</span>
+                            </a>
+                        </div>
+                    @endif
+                @endif
             </div>
         </aside>
 
@@ -166,14 +205,14 @@
 
                     <div class="user-profile-menu dropdown position-relative">
                         <button type="button" class="btn p-0 border-0 bg-transparent d-flex align-items-center text-decoration-none dropdown-toggle text-dark shadow-none" id="userProfileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <div class="avatar-circle">{{ strtoupper(substr(auth()->user()->name ?? 'SA', 0, 2)) }}</div>
-                            <span class="user-name ms-2">{{ auth()->user()->displayname ?? auth()->user()->name ?? 'Super Admin' }}</span>
+                            <div class="avatar-circle">{{ strtoupper(substr(auth()->user()?->name ?? 'SA', 0, 2)) }}</div>
+                            <span class="user-name ms-2">{{ auth()->user()?->displayname ?? auth()->user()?->name ?? 'Super Admin' }}</span>
                             <i class="fa-solid fa-chevron-down fs-11 text-muted ms-1"></i>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm border rounded-3 mt-2 py-2" id="userProfileMenu" aria-labelledby="userProfileDropdown" style="min-width: 230px; font-size: 13.5px; z-index: 1060;">
                             <li class="px-3 py-2 border-bottom">
-                                <div class="fw-semibold text-dark">{{ auth()->user()->name ?? 'Super Admin' }}</div>
-                                <div class="text-muted fs-12">{{ auth()->user()->email ?? 'admin@gpscamera.app' }}</div>
+                                <div class="fw-semibold text-dark">{{ auth()->user()?->name ?? 'Super Admin' }}</div>
+                                <div class="text-muted fs-12">{{ auth()->user()?->email ?? 'admin@gpscamera.app' }}</div>
                             </li>
                             <li>
                                 <a class="dropdown-item py-2 d-flex align-items-center gap-2" href="{{ route('admin.profile') }}">

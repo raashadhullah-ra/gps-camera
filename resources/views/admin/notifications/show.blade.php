@@ -41,10 +41,12 @@
                 <i class="fa-solid fa-arrow-left"></i>
                 <span>Back to Notifications</span>
             </a>
-            <a href="{{ route('admin.notifications.edit', $campaign->id) }}" class="btn btn-primary btn-sm">
-                <i class="fa-solid fa-pen"></i>
-                <span>Edit Notification</span>
-            </a>
+            @if(auth()->user()->hasPermissionTo('notifications.edit'))
+                <a href="{{ route('admin.notifications.edit', $campaign->id) }}" class="btn btn-primary btn-sm">
+                    <i class="fa-solid fa-pen"></i>
+                    <span>Edit Notification</span>
+                </a>
+            @endif
         </div>
     </div>
 
